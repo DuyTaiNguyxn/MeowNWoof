@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/screens/register.dart';
-import 'package:meow_n_woof/screens/login.dart';
-import 'package:meow_n_woof/screens/home.dart';
+import 'package:meow_n_woof/views/register.dart';
+import 'package:meow_n_woof/views/login.dart';
+import 'package:meow_n_woof/views/home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Meow & Woof',
-      theme: ThemeData(primarySwatch: Colors.teal),
-      initialRoute: '/login', // Trang đầu tiên khi chạy ứng dụng
+      theme: ThemeData(primarySwatch: Colors.lightBlue),
+      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
       routes: {
         '/login': (context) => const LoginScreen(), // Định nghĩa route '/login'
         '/register': (context) => const RegisterScreen(), // Định nghĩa route '/register'

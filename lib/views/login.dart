@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/screens/register.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home.dart';
@@ -101,9 +100,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Text("Chưa có tài khoản?"),
                     TextButton(
                       onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => const RegisterScreen()),
-                        );
+                        Navigator.of(context).pushReplacementNamed('/register');
                       },
                       style: TextButton.styleFrom(
                         foregroundColor: Colors.lightBlue,

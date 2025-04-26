@@ -10,7 +10,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PetCare Home'),
+        title: const Text('Meow & Woof'),
         actions: [
           IconButton(
             icon: const Icon(Icons.exit_to_app),
@@ -31,7 +31,7 @@ class HomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Chào mừng bạn đến với PetCare!',
+              'Chào mừng bạn đến với Meow & Woof!',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
@@ -77,7 +77,7 @@ class HomeScreen extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       child: ListTile(
         leading: const CircleAvatar(
-          backgroundColor: Colors.teal,
+          backgroundColor: Colors.lightBlue,
           child: Icon(Icons.pets, color: Colors.white),
         ),
         title: Text(name),
