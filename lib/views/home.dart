@@ -1,90 +1,73 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:meow_n_woof/widgets/home_menu.dart';
+import 'package:meow_n_woof/views/bot_nav_tabs/home_tab.dart';
 
-import 'login.dart';
-
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int _currentIndex = 0;
+
+  final List<Widget> _pages = [
+    HomeTab(),
+    Center(child: Text('Thông báo')),
+    Center(child: Text('Cá nhân')),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Meow & Woof'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: () async {
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.setBool('isLoggedIn', false);
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-              );
-            }
-          )
-        ],
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Chào mừng bạn đến với Meow & Woof!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Quản lý thú cưng của bạn dễ dàng hơn bao giờ hết.',
-              style: TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 32),
-
-            // Danh sách thú cưng (tạm thời là 3 mục giả)
-            const Text(
-              'Danh sách thú cưng:',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-
-            // Danh sách thú cưng
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildPetCard('Charlie', 'Chó', '3 tuổi'),
-                  _buildPetCard('Milo', 'Mèo', '2 tuổi'),
-                  _buildPetCard('Bella', 'Chó', '5 tuổi'),
-                ],
+        toolbarHeight: 80.0,
+        backgroundColor: Colors.lightBlueAccent,
+        title: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Row(
+            children: [
+              Image.asset(
+                'assets/images/logo.png',
+                width: 60,
+                height: 60,
               ),
-            ),
-          ],
+              const SizedBox(width: 8.0),
+              const Text(
+                'Meow & Woof',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Color.fromARGB(255, 6, 25, 81),
+                ),
+              ),
+              const Spacer(),
+              PopupHomeMenu(),
+            ],
+          )
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Chuyển sang màn hình thêm thú cưng
-        },
-        child: const Icon(Icons.add),
-        tooltip: 'Thêm thú cưng',
-      ),
-    );
-  }
-
-  // Widget hiển thị thông tin thú cưng
-  Widget _buildPetCard(String name, String species, String age) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      child: ListTile(
-        leading: const CircleAvatar(
-          backgroundColor: Colors.lightBlue,
-          child: Icon(Icons.pets, color: Colors.white),
-        ),
-        title: Text(name),
-        subtitle: Text('$species, $age'),
-        onTap: () {
-          // TODO: Chuyển đến trang chi tiết thú cưng
-        },
+      body: _pages[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) => setState(() => _currentIndex = index),
+        selectedItemColor: Colors.lightBlue,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Trang chủ',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Thông báo',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: 'Cá nhân',
+          ),
+        ],
       ),
     );
   }
