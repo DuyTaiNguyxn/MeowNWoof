@@ -127,12 +127,17 @@ class _HomeTabState extends State<HomeTab> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => PetProfileDetail(
-                            //petName: _filteredPets[index], // Dữ liệu ví dụ
-                            petName: 'Milu',
-                            species: 'Chó',
-                            breed: 'Poodle',
-                            gender: 'Cái',
+                            petName: 'Tom',
+                            species: 'Mèo',
+                            breed: 'Mèo Anh lông ngắn',
                             age: 2,
+                            gender: 'Đực',
+                            weight: 4.5,
+                            imageUrl: '',
+                            ownerName: 'Nguyễn Văn A',
+                            ownerPhone: '0123456789',
+                            ownerEmail: 'a@gmail.com',
+                            ownerAddress: '123 Đường ABC, Quận 1, TP.HCM',
                           ),
                         ),
                       );

@@ -16,7 +16,6 @@ class _HomeScreenState extends State<HomeScreen> {
     HomeTab(),
     Center(child: Text('Lịch khám')),
     Center(child: Text('Lịch tiêm')),
-    Center(child: Text('Thuốc')),
     Center(child: Text('Cá nhân')),
   ];
 
@@ -45,10 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.vaccines),
             label: 'Lịch tiêm',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.medication),
-            label: 'Thuốc',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
