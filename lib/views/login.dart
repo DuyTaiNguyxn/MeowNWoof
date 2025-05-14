@@ -94,21 +94,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
 
                 // Chuyển qua đăng ký
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Chưa có tài khoản?"),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pushReplacementNamed('/register');
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.lightBlue,
-                      ),
-                      child: const Text("Đăng ký"),
-                    )
-                  ],
-                )
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     const Text("Chưa có tài khoản?"),
+                //     TextButton(
+                //       onPressed: () {
+                //         Navigator.of(context).pushReplacementNamed('/register');
+                //       },
+                //       style: TextButton.styleFrom(
+                //         foregroundColor: Colors.lightBlue,
+                //       ),
+                //       child: const Text("Đăng ký"),
+                //     )
+                //   ],
+                // )
               ],
             ),
           ),
