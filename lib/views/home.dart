@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/views/bot_nav_tabs/home_tab.dart';
+import 'package:meow_n_woof/views/bottom_navbar_tabs/appointment_tab.dart';
+import 'package:meow_n_woof/views/bottom_navbar_tabs/home_tab.dart';
+import 'package:meow_n_woof/views/bottom_navbar_tabs/vaccination_schedule_tab.dart';
 import 'package:meow_n_woof/widgets/app_bar.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -14,9 +16,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _pages = [
     HomeTab(),
-    Center(child: Text('Lịch khám')),
-    Center(child: Text('Lịch tiêm')),
-    Center(child: Text('Cá nhân')),
+    AppointmentTab(),
+    VaccinationScheduleTab(),
+    Center(child: Text('Thông báo')),
   ];
 
   @override
@@ -46,8 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Lịch tiêm',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Cá nhân',
+            icon: Icon(Icons.notifications),
+            label: 'Thông báo',
           ),
         ],
       ),

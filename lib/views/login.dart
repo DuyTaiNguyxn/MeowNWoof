@@ -11,7 +11,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
+  final usernameController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
@@ -39,19 +39,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Email
                 TextField(
-                  controller: emailController,
+                  controller: usernameController,
                   decoration: InputDecoration(
-                    labelText: 'Email',
+                    labelText: 'Tên đăng nhập',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                    prefixIcon: const Icon(Icons.email),
+                    prefixIcon: const Icon(Icons.person),
                   ),
-                  keyboardType: TextInputType.emailAddress,
                 ),
+
                 const SizedBox(height: 16),
 
-                // Mật khẩu
                 TextField(
                   controller: passwordController,
                   obscureText: true,
@@ -69,9 +67,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: ElevatedButton(
                     onPressed: () async {
                       // TODO: Thêm xử lý đăng nhập ở đây
-                      final email = emailController.text.trim();
+                      final username = usernameController.text.trim();
                       final password = passwordController.text.trim();
-                      print("Đăng nhập với $email - $password");
+                      print("Đăng nhập với $username - $password");
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setBool('isLoggedIn', true);
                       Navigator.pushReplacement(

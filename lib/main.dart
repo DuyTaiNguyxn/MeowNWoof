@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
       routes: {
         '/login': (context) => const LoginScreen(), // Định nghĩa route '/login'
-        '/register': (context) => const RegisterScreen(), // Định nghĩa route '/register'
+        //'/register': (context) => const RegisterScreen(), // Định nghĩa route '/register'
         '/home' : (context) => const HomeScreen(),
       },
     );
