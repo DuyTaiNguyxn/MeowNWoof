@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/providers/appointment_provider.dart';
+import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
 import 'package:provider/provider.dart';
 
-class ConfirmCreateAppointmentScreen extends StatelessWidget {
-  const ConfirmCreateAppointmentScreen({ Key? key }) : super(key: key);
+class ConfirmCreateVaccinationScheduleScreen extends StatelessWidget {
+  const ConfirmCreateVaccinationScheduleScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final appointmentProvider = Provider.of<AppointmentProvider>(context);
-    final selectedPet = appointmentProvider.selectedPet;
-    final selectedVeterinarian = appointmentProvider.selectedVeterinarian;
-    final selectedDateTime = appointmentProvider.selectedDateTime;
+    final scheduleProvider = Provider.of<VaccinationScheduleProvider>(context);
+    final selectedPet = scheduleProvider.selectedPet;
+    final diseasePrevented = scheduleProvider.diseasePrevented;
+    final selectedDate = scheduleProvider.selectedDate;
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -20,7 +20,7 @@ class ConfirmCreateAppointmentScreen extends StatelessWidget {
           const SizedBox(height: 20),
           const Center(
             child: Text(
-              "Xác nhận lịch hẹn khám",
+              "Xác nhận lịch hẹn tiêm phòng",
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blueAccent),
             ),
           ),
@@ -36,12 +36,14 @@ class ConfirmCreateAppointmentScreen extends StatelessWidget {
                 children: [
                   _buildInfoRow(Icons.pets, "Pet", selectedPet ?? "Chưa chọn"),
                   Divider(thickness: 1.2),
-                  _buildInfoRow(Icons.medical_services, "Bác sĩ", selectedVeterinarian ?? "Chưa chọn"),
+                  _buildInfoRow(Icons.vaccines, "Bệnh tiêm phòng", diseasePrevented ?? "Chưa chọn"),
                   Divider(thickness: 1.2),
-                  _buildInfoRow(Icons.access_time, "Thời gian",
-                      selectedDateTime != null
-                          ? "${selectedDateTime!.day}/${selectedDateTime!.month}/${selectedDateTime!.year} lúc ${selectedDateTime!.hour}:${selectedDateTime!.minute.toString().padLeft(2, '0')}"
-                          : "Chưa chọn"
+                  _buildInfoRow(
+                    Icons.access_time,
+                    "Ngày tiêm",
+                    selectedDate != null
+                        ? "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}"
+                        : "Chưa chọn",
                   ),
                 ],
               ),

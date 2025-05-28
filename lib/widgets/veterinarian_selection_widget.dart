@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../views/providers/veterinarian_provider.dart';
 
 class VeterinarianSelectionWidget extends StatefulWidget {
+  final String? selectedVet;
   final Function(String) onVeterinarianSelected;
 
   const VeterinarianSelectionWidget({
     Key? key,
+    required this.selectedVet,
     required this.onVeterinarianSelected,
   }) : super(key: key);
 
@@ -51,9 +51,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
 
   @override
   Widget build(BuildContext context) {
-    final vetProvider = Provider.of<VeterinarianProvider>(context);
-    final selectedVet = vetProvider.selectedVeterinarian;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -78,27 +75,30 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
           const SizedBox(height: 12),
           Expanded(
             child: _filteredVeterinarians.isEmpty
-                ? const Center(child: Text('Không tìm thấy bác sĩ nào.'))
+                ? const Center(
+              child: Text('Không tìm thấy bác sĩ nào.'),
+            )
                 : ListView.builder(
               itemCount: _filteredVeterinarians.length,
               itemBuilder: (context, index) {
                 final vet = _filteredVeterinarians[index];
-                final name = vet['name']!;
-                final avatarPath = vet['avatar'];
+                final name = vet['name'] ?? 'Không rõ';
+                final avatarPath = vet['avatar'] ?? '';
+                final isSelected = name == widget.selectedVet;
 
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  color: name == selectedVet ? Colors.lightBlueAccent : null,
+                  color: isSelected ? Colors.lightBlueAccent : null,
                   child: ListTile(
-                    contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-                    minVerticalPadding: 20,
+                    contentPadding:
+                    const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     leading: CircleAvatar(
-                      radius: 36,
+                      radius: 30,
                       backgroundImage: AssetImage(
-                        (avatarPath != null && avatarPath.isNotEmpty)
+                        avatarPath.isNotEmpty
                             ? avatarPath
                             : 'assets/images/avatar.png',
                       ),
@@ -111,7 +111,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
                       ),
                     ),
                     onTap: () {
-                      vetProvider.selectVeterinarian(name);
                       widget.onVeterinarianSelected(name);
                     },
                   ),

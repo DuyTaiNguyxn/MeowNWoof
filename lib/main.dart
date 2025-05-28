@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/providers/appointment_provider.dart';
+import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
 import 'package:meow_n_woof/views/login.dart';
 import 'package:meow_n_woof/views/home.dart';
-import 'package:meow_n_woof/views/providers/pet_provider.dart';
-import 'package:meow_n_woof/views/providers/veterinarian_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,8 +22,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PetProvider()),
-        ChangeNotifierProvider(create: (_) => VeterinarianProvider()),
+        ChangeNotifierProvider(create: (_) => VaccinationScheduleProvider()),
+        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

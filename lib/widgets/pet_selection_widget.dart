@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../views/providers/pet_provider.dart';
 
 class PetSelectionWidget extends StatefulWidget {
+  final String? selectedPet;
   final Function(String) onPetSelected;
 
-  const PetSelectionWidget({Key? key, required this.onPetSelected}) : super(key: key);
+  const PetSelectionWidget({
+    Key? key,
+    required this.selectedPet,
+    required this.onPetSelected,
+  }) : super(key: key);
 
   @override
   State<PetSelectionWidget> createState() => _PetSelectionWidgetState();
@@ -39,9 +42,6 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final petProvider = Provider.of<PetProvider>(context);
-    final selectedPet = petProvider.selectedPet;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -58,7 +58,7 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
           TextField(
             controller: _searchController,
             decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search),
+              prefixIcon: const Icon(Icons.search),
               hintText: 'Tìm thú cưng...',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
             ),
@@ -71,12 +71,14 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
               itemCount: _filteredPets.length,
               itemBuilder: (context, index) {
                 final pet = _filteredPets[index];
+                final isSelected = pet == widget.selectedPet;
+
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  color: pet == selectedPet ? Colors.lightBlueAccent : null,
+                  color: isSelected ? Colors.lightBlueAccent : null,
                   child: ListTile(
                     leading: const Icon(Icons.pets, size: 32),
                     title: Text(
@@ -91,8 +93,7 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     onTap: () {
-                      petProvider.selectPet(pet); // lưu global
-                      widget.onPetSelected(pet);  // callback
+                      widget.onPetSelected(pet);
                     },
                   ),
                 );

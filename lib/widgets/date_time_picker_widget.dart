@@ -2,36 +2,87 @@ import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart' as picker;
 
 class DateTimePickerWidget extends StatefulWidget {
+  final DateTime? dateTimeSelected;
   final Function(DateTime) onDateTimeSelected;
 
-  const DateTimePickerWidget({Key? key, required this.onDateTimeSelected}) : super(key: key);
+  const DateTimePickerWidget({
+    Key? key,
+    required this.dateTimeSelected,
+    required this.onDateTimeSelected,
+  }) : super(key: key);
 
   @override
   State<DateTimePickerWidget> createState() => _DateTimePickerWidgetState();
 }
 
 class _DateTimePickerWidgetState extends State<DateTimePickerWidget> {
-  DateTime? _selectedDateTime;
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
 
-  void _showPicker() {
-    picker.DatePicker.showDateTimePicker(
+  @override
+  void initState() {
+    super.initState();
+    if (widget.dateTimeSelected != null) {
+      _selectedDate = widget.dateTimeSelected;
+      _selectedTime = TimeOfDay.fromDateTime(widget.dateTimeSelected!);
+    }
+  }
+
+  void _combineDateTimeIfReady() {
+    if (_selectedDate != null && _selectedTime != null) {
+      final combined = DateTime(
+        _selectedDate!.year,
+        _selectedDate!.month,
+        _selectedDate!.day,
+        _selectedTime!.hour,
+        _selectedTime!.minute,
+      );
+      widget.onDateTimeSelected(combined);
+    }
+  }
+
+  void _showDatePicker() {
+    picker.DatePicker.showDatePicker(
       context,
       showTitleActions: true,
       minTime: DateTime.now(),
       maxTime: DateTime(2100, 12, 31),
       onConfirm: (date) {
         setState(() {
-          _selectedDateTime = date;
+          _selectedDate = date;
         });
-        widget.onDateTimeSelected(date);
+        _combineDateTimeIfReady();
       },
-      currentTime: _selectedDateTime ?? DateTime.now(),
-      locale: picker.LocaleType.vi, // Việt hóa giao diện picker
+      currentTime: _selectedDate ?? DateTime.now(),
+      locale: picker.LocaleType.vi,
+    );
+  }
+
+  void _showTimePicker() {
+    picker.DatePicker.showTimePicker(
+      context,
+      showTitleActions: true,
+      onConfirm: (time) {
+        setState(() {
+          _selectedTime = TimeOfDay(hour: time.hour, minute: time.minute);
+        });
+        _combineDateTimeIfReady();
+      },
+      currentTime: _selectedDate ?? DateTime.now(),
+      locale: picker.LocaleType.vi,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final dateText = _selectedDate == null
+        ? 'Chọn ngày...'
+        : '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
+
+    final timeText = _selectedTime == null
+        ? 'Chọn giờ...'
+        : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -46,7 +97,7 @@ class _DateTimePickerWidgetState extends State<DateTimePickerWidget> {
           ),
           const SizedBox(height: 20),
           GestureDetector(
-            onTap: _showPicker,
+            onTap: _showDatePicker,
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
@@ -59,12 +110,36 @@ class _DateTimePickerWidgetState extends State<DateTimePickerWidget> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _selectedDateTime == null
-                          ? 'Chọn ngày giờ...'
-                          : '${_selectedDateTime!.day}/${_selectedDateTime!.month}/${_selectedDateTime!.year}  ${_selectedDateTime!.hour.toString().padLeft(2, '0')}:${_selectedDateTime!.minute.toString().padLeft(2, '0')}',
+                      dateText,
                       style: TextStyle(
                         fontSize: 16,
-                        color: _selectedDateTime == null ? Colors.grey : Colors.black,
+                        color: _selectedDate == null ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: _showTimePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.grey),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time, color: Colors.green),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      timeText,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: _selectedTime == null ? Colors.grey : Colors.black,
                       ),
                     ),
                   ),

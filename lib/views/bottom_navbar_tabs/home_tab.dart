@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/appointment/create_appointment.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
-import 'package:meow_n_woof/views/user_profile.dart';
+import 'package:meow_n_woof/views/user/user_profile.dart';
+import 'package:meow_n_woof/views/vaccination_schedule/create_vaccination_schedule.dart';
 
 class HomeTab extends StatefulWidget {
   @override
@@ -51,7 +52,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _navigateToCreateVaccinationSchedule() {
-    // Navigator.push
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateVaccinationScheduleScreen()),
+    );
   }
 
   void _navigateToMedicineList() {

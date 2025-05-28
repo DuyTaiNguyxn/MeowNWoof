@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/views/user/edit_user_profile.dart';
 
 class UserProfilePage extends StatelessWidget {
   final Map<String, dynamic> userData;
@@ -81,21 +82,53 @@ class UserProfilePage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            ElevatedButton.icon(
-              onPressed: () {
-                // TODO: Thêm chức năng chỉnh sửa
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Color.fromARGB(255, 6, 25, 81),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text(
-                'Chỉnh sửa hồ sơ',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => EditUserProfilePage(userData: userData)),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 6, 25, 81),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      label: const Text(
+                        'Chỉnh sửa',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        // TODO: Chức năng đổi mật khẩu
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.lock, color: Colors.white),
+                      label: const Text(
+                        'Đổi mật khẩu',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+
             const SizedBox(height: 40),
           ],
         ),

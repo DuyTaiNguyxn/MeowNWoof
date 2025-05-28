@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/views/forgot_password.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'home.dart';
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final usernameController = TextEditingController();
   final passwordController = TextEditingController();
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -28,15 +30,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Logo / Tên App
                 Image.asset('assets/images/logo.png', width: 200, height: 200,),
-                const SizedBox(height: 12),
-                const Text(
-                  'Đăng Nhập',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.lightBlue,
-                  ),
-                ),
+
                 const SizedBox(height: 32),
 
                 TextField(
@@ -52,13 +46,38 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
+                  obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Mật khẩu',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                    ),
                   ),
                 ),
+
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                      );
+                    },
+                    child: const Text(
+                      'Quên mật khẩu?',
+                      style: TextStyle(color: Colors.lightBlue),
+                    ),
+                  ),
+                ),
+
                 const SizedBox(height: 24),
 
                 // Nút đăng nhập
@@ -91,22 +110,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 16),
 
-                // Chuyển qua đăng ký
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //   children: [
-                //     const Text("Chưa có tài khoản?"),
-                //     TextButton(
-                //       onPressed: () {
-                //         Navigator.of(context).pushReplacementNamed('/register');
-                //       },
-                //       style: TextButton.styleFrom(
-                //         foregroundColor: Colors.lightBlue,
-                //       ),
-                //       child: const Text("Đăng ký"),
-                //     )
-                //   ],
-                // )
               ],
             ),
           ),

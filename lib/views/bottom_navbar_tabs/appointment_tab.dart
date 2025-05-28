@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:meow_n_woof/views/appointment/create_appointment.dart';
+import 'package:meow_n_woof/views/bottom_navbar_tabs/home_tab.dart';
 
 class AppointmentTab extends StatefulWidget {
   const AppointmentTab({Key? key}) : super(key: key);
@@ -231,8 +233,10 @@ class _AppointmentTabState extends State<AppointmentTab> {
         ),
       floatingActionButton: FloatingActionButton( // Add FAB here
         onPressed: () {
-          // Add your action here
-          print('Add button pressed!');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateAppointmentScreen()),
+          );
         },
         backgroundColor: Colors.lightBlue,
         foregroundColor: Colors.white,

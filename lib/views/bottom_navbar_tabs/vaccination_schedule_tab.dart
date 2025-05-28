@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:meow_n_woof/views/vaccination_schedule/create_vaccination_schedule.dart';
 
 class VaccinationScheduleTab extends StatefulWidget {
   const VaccinationScheduleTab({Key? key}) : super(key: key);
@@ -211,8 +212,10 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
         ),
       floatingActionButton: FloatingActionButton( // Add FAB here
         onPressed: () {
-          // Add your action here
-          print('Add button pressed!');
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreateVaccinationScheduleScreen()),
+          );
         },
         backgroundColor: Colors.lightBlue,
         foregroundColor: Colors.white,
