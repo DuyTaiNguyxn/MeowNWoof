@@ -180,7 +180,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                           icon: Icons.delete,
-                          label: 'Xoá',
+                          label: 'Huỷ',
                         ),
                       ],
                     ),
@@ -247,15 +247,15 @@ class _AppointmentTabState extends State<AppointmentTab> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Xác nhận xoá'),
-          content: Text('Bạn có chắc muốn xoá lịch khám của ${appointment['petName']} không?'),
+          title: const Text('Xác nhận huỷ?'),
+          content: Text('Bạn có chắc muốn huỷ lịch khám của ${appointment['petName']} không?'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop(false);
               },
               child: const Text(
-                'Huỷ',
+                'Không',
                 style: TextStyle(
                   color: Colors.black,
                 ),
@@ -266,7 +266,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
                 Navigator.of(dialogContext).pop(true);
               },
               child: const Text(
-                'Xoá',
+                'Có',
                 style: TextStyle(
                   color: Colors.red,
                 ),
@@ -283,7 +283,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
         filteredAppointments.removeAt(index);
       });
       ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(content: Text('Đã xoá lịch khám của ${appointment['petName']}')),
+        SnackBar(content: Text('Đã huỷ lịch khám của ${appointment['petName']}')),
       );
     }
   }

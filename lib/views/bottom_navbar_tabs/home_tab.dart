@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/views/appointment/create_appointment.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
 import 'package:meow_n_woof/views/user_profile.dart';
@@ -43,7 +44,10 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _navigateToCreateAppointment() {
-    // Navigator
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => CreateAppointmentScreen()),
+    );
   }
 
   void _navigateToCreateVaccinationSchedule() {

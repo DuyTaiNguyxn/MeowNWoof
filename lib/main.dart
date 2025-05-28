@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/views/register.dart';
 import 'package:meow_n_woof/views/login.dart';
 import 'package:meow_n_woof/views/home.dart';
+import 'package:meow_n_woof/views/providers/pet_provider.dart';
+import 'package:meow_n_woof/views/providers/veterinarian_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -16,19 +18,23 @@ class MyApp extends StatelessWidget {
   final bool isLoggedIn;
   const MyApp({super.key, required this.isLoggedIn});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Meow & Woof',
-      theme: ThemeData(primarySwatch: Colors.lightBlue),
-      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
-      routes: {
-        '/login': (context) => const LoginScreen(), // Định nghĩa route '/login'
-        //'/register': (context) => const RegisterScreen(), // Định nghĩa route '/register'
-        '/home' : (context) => const HomeScreen(),
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => PetProvider()),
+        ChangeNotifierProvider(create: (_) => VeterinarianProvider()),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'Meow & Woof',
+        theme: ThemeData(primarySwatch: Colors.lightBlue),
+        home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
+        routes: {
+          '/login': (context) => const LoginScreen(),
+          '/home': (context) => const HomeScreen(),
+        },
+      ),
     );
   }
 }
