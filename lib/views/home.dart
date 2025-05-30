@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/bottom_navbar_tabs/appointment_tab.dart';
 import 'package:meow_n_woof/views/bottom_navbar_tabs/home_tab.dart';
+import 'package:meow_n_woof/views/bottom_navbar_tabs/notification_tab.dart';
 import 'package:meow_n_woof/views/bottom_navbar_tabs/vaccination_schedule_tab.dart';
 import 'package:meow_n_woof/widgets/app_bar.dart';
 
@@ -18,7 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
     HomeTab(),
     AppointmentTab(),
     VaccinationScheduleTab(),
-    Center(child: Text('Thông báo')),
+    NotificationTab(),
   ];
 
   @override

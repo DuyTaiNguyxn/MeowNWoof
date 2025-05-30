@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/widgets/home_menu.dart';
+import 'package:meow_n_woof/widgets/popup_menu.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -39,7 +39,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             const Spacer(),
-            action ?? const PopupHomeMenu(),
+            action ?? const PopupMenuWidget(),
           ],
         ),
       ),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:meow_n_woof/views/appointment/create_appointment.dart';
-import 'package:meow_n_woof/views/bottom_navbar_tabs/home_tab.dart';
 
 class AppointmentTab extends StatefulWidget {
   const AppointmentTab({Key? key}) : super(key: key);
@@ -36,35 +35,6 @@ class _AppointmentTabState extends State<AppointmentTab> {
       'owner': 'Nguyễn Văn A - 0123456789',
       'veterinarian': 'Trần Thị B',
       'datetime': '20/05/2025 - 10:00',
-    },
-    {
-      'petName': 'Tommy',
-      'owner': 'Trần Văn C - 0987654321',
-      'veterinarian': 'Lê Văn D',
-      'datetime': '21/05/2025 - 14:30',
-    },
-    {
-      'petName': 'Luna',
-      'owner': 'Phạm Thị E - 0901234567',
-      'veterinarian': 'Nguyễn Văn F',
-      'datetime': '22/05/2025 - 09:00',
-    },{
-      'petName': 'Mimi',
-      'owner': 'Nguyễn Văn A - 0123456789',
-      'veterinarian': 'Trần Thị B',
-      'datetime': '20/05/2025 - 10:00',
-    },
-    {
-      'petName': 'Tommy',
-      'owner': 'Trần Văn C - 0987654321',
-      'veterinarian': 'Lê Văn D',
-      'datetime': '21/05/2025 - 14:30',
-    },
-    {
-      'petName': 'Luna',
-      'owner': 'Phạm Thị E - 0901234567',
-      'veterinarian': 'Nguyễn Văn F',
-      'datetime': '22/05/2025 - 09:00',
     },
   ];
 
@@ -201,7 +171,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
                             children: [
                               RichText(
                                 text: TextSpan(
-                                  style: const TextStyle(color: Colors.black),
+                                  style: TextStyle(color: Colors.black),
                                   children: [
                                     const TextSpan(text: '🐾 Tên thú cưng: '),
                                     TextSpan(
@@ -215,11 +185,43 @@ class _AppointmentTabState extends State<AppointmentTab> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text('👤 Chủ nuôi: ${appointment['owner']}'),
+                              Text(
+                                '👤 Chủ nuôi: ${appointment['owner']}',
+                                style: TextStyle(
+                                  color: Colors.black
+                                ),
+                              ),
                               const SizedBox(height: 6),
-                              Text('👨‍⚕️ Bác sĩ thú y: ${appointment['veterinarian']}'),
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.black),
+                                  children: [
+                                    const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
+                                    TextSpan(
+                                      text: appointment['veterinarian'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blueAccent,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                               const SizedBox(height: 6),
-                              Text('📅 Ngày - Giờ: ${appointment['datetime']}'),
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.black),
+                                  children: [
+                                    const TextSpan(text: '📅 Ngày - Giờ: '),
+                                    TextSpan(
+                                      text: appointment['datetime'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),

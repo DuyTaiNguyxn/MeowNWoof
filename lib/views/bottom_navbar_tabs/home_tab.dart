@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/views/appointment/create_appointment.dart';
+import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
+import 'package:meow_n_woof/views/medicine/medicine_list.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
-import 'package:meow_n_woof/views/vaccination_schedule/create_vaccination_schedule.dart';
+import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 
 class HomeTab extends StatefulWidget {
   @override
@@ -11,9 +13,27 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  final List<String> _allPets = List.generate(20, (index) => 'Pet ${index + 1}');
-  List<String> _filteredPets = [];
+  final List<Pet> _allPets = List.generate(
+    20,
+        (index) => Pet(
+      name: 'Pet ${index + 1}',
+      ownerName: 'Nguyễn Văn A',
+      ownerPhone: '0123456789',
+      species: 'Dog',
+      breed: 'Poodle',
+      age: 2,
+      gender: 'Đực',
+      weight: 4.5,
+      ownerAddress: '',
+      ownerEmail: '',
+      imageUrl: '',
+    ),
+  );
+
+  List<Pet> _filteredPets = [];
   TextEditingController _searchController = TextEditingController();
+
+  String selectedFilter = 'Tên thú cưng';
 
   @override
   void initState() {
@@ -23,11 +43,20 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _onSearch() {
+    final keyword = _searchController.text.toLowerCase();
     setState(() {
-      _filteredPets = _allPets
-          .where((pet) =>
-          pet.toLowerCase().contains(_searchController.text.toLowerCase()))
-          .toList();
+      _filteredPets = _allPets.where((pet) {
+        switch (selectedFilter) {
+          case 'Tên thú cưng':
+            return pet.name.toLowerCase().contains(keyword);
+          case 'Chủ nuôi':
+            return pet.ownerName.toLowerCase().contains(keyword);
+          case 'Số điện thoại':
+            return pet.ownerPhone.contains(keyword);
+          default:
+            return pet.name.toLowerCase().contains(keyword);
+        }
+      }).toList();
     });
   }
 
@@ -44,22 +73,57 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
-  void _navigateToCreateAppointment() {
-    Navigator.push(
+  void _navigateToCreateMedicalRecord() async {
+    final selectedPet = await Navigator.push<Pet>(
       context,
-      MaterialPageRoute(builder: (context) => CreateAppointmentScreen()),
+      MaterialPageRoute(
+        builder: (_) => PetSelectionWidget(
+          selectedPet: null,
+          onPetSelected: (pet) {
+            Navigator.pop(context, pet);
+          },
+        ),
+      ),
     );
+
+    if (selectedPet != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MedicalRecordListPage(pet: selectedPet),
+        ),
+      );
+    }
   }
 
-  void _navigateToCreateVaccinationSchedule() {
-    Navigator.push(
+  void _navigateToCreatePrescriptions() async {
+    final selectedPet = await Navigator.push<Pet>(
       context,
-      MaterialPageRoute(builder: (context) => CreateVaccinationScheduleScreen()),
+      MaterialPageRoute(
+        builder: (_) => PetSelectionWidget(
+          selectedPet: null,
+          onPetSelected: (pet) {
+            Navigator.pop(context, pet);
+          },
+        ),
+      ),
     );
+
+    if (selectedPet != null) {
+      // Navigator.push(
+      //   context,
+      //   MaterialPageRoute(
+      //     builder: (_) => CreatePrescriptionsScreen(selectedPet: selectedPet),
+      //   ),
+      // );
+    }
   }
 
   void _navigateToMedicineList() {
-    // Navigator.push
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MedicineListPage()),
+    );
   }
 
   Widget _buildUserHeader() {
@@ -119,15 +183,35 @@ class _HomeTabState extends State<HomeTab> {
     return GridView.count(
       shrinkWrap: true,
       crossAxisCount: 2,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 16,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
       childAspectRatio: 1.8,
-      physics: NeverScrollableScrollPhysics(),
+      physics: const NeverScrollableScrollPhysics(),
       children: [
-        _buildActionButton(Icons.pets, 'Tạo hồ sơ pet', Colors.yellowAccent[100]!, _navigateToCreatePetProfile),
-        _buildActionButton(Icons.event, 'Tạo lịch khám', Colors.greenAccent[100]!, _navigateToCreateAppointment),
-        _buildActionButton(Icons.vaccines, 'Tạo lịch tiêm chủng', Colors.lightBlueAccent[100]!, _navigateToCreateVaccinationSchedule),
-        _buildActionButton(Icons.medication, 'Quản lý Thuốc', Colors.orangeAccent[100]!, _navigateToMedicineList),
+        _buildActionButton(
+          Icons.pets,
+          'Tạo Hồ sơ Pet',
+          Colors.yellowAccent[100]!,
+          _navigateToCreatePetProfile,
+        ),
+        _buildActionButton(
+          Icons.medical_services,
+          'Tạo Hồ sơ khám bệnh',
+          Colors.lightBlueAccent[100]!,
+          _navigateToCreateMedicalRecord,
+        ),
+        _buildActionButton(
+          Icons.note_alt,
+          'Lên đơn thuốc',
+          Colors.greenAccent[100]!,
+          _navigateToCreatePrescriptions,
+        ),
+        _buildActionButton(
+          Icons.medication,
+          'Tra cứu thuốc',
+          Colors.orangeAccent[100]!,
+          _navigateToMedicineList,
+        ),
       ],
     );
   }
@@ -145,7 +229,12 @@ class _HomeTabState extends State<HomeTab> {
           children: [
             Icon(icon, size: 40),
             const SizedBox(height: 8),
-            Text(label, textAlign: TextAlign.center, style: TextStyle(fontSize: 14)),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14),
+              maxLines: 2,
+            ),
           ],
         ),
       ),
@@ -163,14 +252,50 @@ class _HomeTabState extends State<HomeTab> {
           const SizedBox(height: 20),
           _buildActionGrid(),
           const SizedBox(height: 20),
-          TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              prefixIcon: Icon(Icons.search),
-              hintText: 'Tìm kiếm hồ sơ pet...',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-            ),
+
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.search),
+                    hintText: 'Tìm kiếm hồ sơ pet...',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Thêm lựa chọn vào dropdown filter
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.filter_list),
+                onSelected: (value) {
+                  setState(() {
+                    selectedFilter = value;
+                    _onSearch();
+                  });
+                },
+                itemBuilder: (context) => [
+                  CheckedPopupMenuItem(
+                    value: 'Tên thú cưng',
+                    checked: selectedFilter == 'Tên thú cưng',
+                    child: const Text('Tên thú cưng'),
+                  ),
+                  CheckedPopupMenuItem(
+                    value: 'Chủ nuôi',
+                    checked: selectedFilter == 'Chủ nuôi',
+                    child: const Text('Chủ nuôi'),
+                  ),
+                  CheckedPopupMenuItem(
+                    value: 'Số điện thoại',
+                    checked: selectedFilter == 'Số điện thoại',
+                    child: const Text('Số điện thoại'),
+                  ),
+                ],
+              ),
+            ],
           ),
+
           const SizedBox(height: 12),
           Expanded(
             child: _filteredPets.isEmpty
@@ -178,6 +303,7 @@ class _HomeTabState extends State<HomeTab> {
                 : ListView.builder(
               itemCount: _filteredPets.length,
               itemBuilder: (context, index) {
+                final pet = _filteredPets[index];
                 return Card(
                   elevation: 2,
                   shape: RoundedRectangleBorder(
@@ -186,33 +312,21 @@ class _HomeTabState extends State<HomeTab> {
                   child: ListTile(
                     leading: Icon(Icons.pets, size: 32),
                     title: Text(
-                      _filteredPets[index],
+                      pet.name,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     subtitle: Text(
-                      'Nguyễn Văn A - 0123456789', // có thể thay bằng data thật nếu có
+                      '${pet.ownerName} - 0123456789', // có thể thay bằng data thật nếu có
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PetProfileDetail(
-                            petName: 'Tom',
-                            species: 'Mèo',
-                            breed: 'Mèo Anh lông ngắn',
-                            age: 2,
-                            gender: 'Đực',
-                            weight: 4.5,
-                            imageUrl: '',
-                            ownerName: 'Nguyễn Văn A',
-                            ownerPhone: '0123456789',
-                            ownerEmail: 'a@gmail.com',
-                            ownerAddress: '123 Đường ABC, Quận 1, TP.HCM',
-                          ),
+                          builder: (_) => PetProfileDetail(pet: pet),
                         ),
                       );
                     },

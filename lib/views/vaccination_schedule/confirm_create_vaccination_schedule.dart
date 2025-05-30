@@ -34,7 +34,7 @@ class ConfirmCreateVaccinationScheduleScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(Icons.pets, "Pet", selectedPet ?? "Chưa chọn"),
+                  _buildInfoRow(Icons.pets, "Pet", selectedPet?.name ?? "Chưa chọn"),
                   Divider(thickness: 1.2),
                   _buildInfoRow(Icons.vaccines, "Bệnh tiêm phòng", diseasePrevented ?? "Chưa chọn"),
                   Divider(thickness: 1.2),
@@ -55,6 +55,8 @@ class ConfirmCreateVaccinationScheduleScreen extends StatelessWidget {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
+    final bool isUnselected = value == "Chưa chọn";
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -80,7 +82,7 @@ class ConfirmCreateVaccinationScheduleScreen extends StatelessWidget {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
-                    color: Colors.lightBlue,
+                    color: isUnselected ? Colors.red : Colors.lightBlue,
                   ),
                 ),
               ],

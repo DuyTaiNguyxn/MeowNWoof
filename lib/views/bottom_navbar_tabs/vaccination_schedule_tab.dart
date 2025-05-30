@@ -147,7 +147,7 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
                           icon: Icons.delete,
-                          label: 'Xoá',
+                          label: 'Huỷ',
                         ),
                       ],
                     ),
@@ -180,7 +180,12 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text('👤 Chủ nuôi: ${schedule['owner']}'),
+                              Text(
+                                '👤 Chủ nuôi: ${schedule['owner']}',
+                                style: TextStyle(
+                                    color: Colors.black
+                                ),
+                              ),
                               const SizedBox(height: 6),
                               RichText(
                                 text: TextSpan(
@@ -191,14 +196,27 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
                                       text: schedule['vaccine'],
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
+                                        color: Colors.blueAccent,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text('📅 Ngày tiêm: ${schedule['date']}'),
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.black),
+                                  children: [
+                                    const TextSpan(text: '📅 Ngày tiêm: '),
+                                    TextSpan(
+                                      text: schedule['date'],
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -230,8 +248,8 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: const Text('Xác nhận xoá'),
-          content: Text('Bạn có chắc muốn xoá lịch tiêm của ${appointment['petName']} không?'),
+          title: const Text('Xác nhận huỷ'),
+          content: Text('Bạn có chắc muốn huỷ lịch tiêm của ${appointment['petName']} không?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -249,7 +267,7 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
                 Navigator.of(dialogContext).pop(true);
               },
               child: const Text(
-                'Xoá',
+                'Huỷ',
                 style: TextStyle(
                   color: Colors.red,
                 ),
@@ -266,7 +284,7 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
         filteredSchedules.removeAt(index);
       });
       ScaffoldMessenger.of(this.context).showSnackBar(
-        SnackBar(content: Text('Đã xoá lịch tiêm của ${appointment['petName']}')),
+        SnackBar(content: Text('Đã huỷ lịch tiêm của ${appointment['petName']}')),
       );
     }
   }

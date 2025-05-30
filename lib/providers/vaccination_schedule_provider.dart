@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/models/pet.dart';
 
 class VaccinationScheduleProvider extends ChangeNotifier {
-  String? selectedPet;
+  Pet? selectedPet;
   String? diseasePrevented;
   DateTime? selectedDate;
 
-  void setSelectedPet(String pet) {
+  void setSelectedPet(Pet pet) {
     selectedPet = pet;
     notifyListeners();
   }

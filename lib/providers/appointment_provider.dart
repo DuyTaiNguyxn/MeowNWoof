@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/models/pet.dart';
 
 class AppointmentProvider extends ChangeNotifier {
-  String? selectedPet;
+  Pet? selectedPet;
   String? selectedVeterinarian;
   DateTime? selectedDateTime;
 
-  void setSelectedPet(String pet) {
+  void setSelectedPet(Pet pet) {
     selectedPet = pet;
     notifyListeners();
   }

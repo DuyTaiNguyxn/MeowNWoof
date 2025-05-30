@@ -1,28 +1,52 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:meow_n_woof/models/pet.dart';
 
-class CreatePetProfilePage extends StatefulWidget {
+class EditPetProfilePage extends StatefulWidget {
+  final Pet pet;
+
+  const EditPetProfilePage({super.key, required this.pet});
+
   @override
-  State<CreatePetProfilePage> createState() => _CreatePetProfilePageState();
+  State<EditPetProfilePage> createState() => _EditPetProfilePageState();
 }
 
-class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
+class _EditPetProfilePageState extends State<EditPetProfilePage> {
   final _formKey = GlobalKey<FormState>();
   File? _selectedImage;
   final picker = ImagePicker();
 
-  final TextEditingController petNameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController weightController = TextEditingController();
-  final TextEditingController ownerNameController = TextEditingController();
-  final TextEditingController ownerPhoneController = TextEditingController();
-  final TextEditingController ownerEmailController = TextEditingController();
-  final TextEditingController ownerAddressController = TextEditingController();
+  late TextEditingController petNameController;
+  late TextEditingController ageController;
+  late TextEditingController weightController;
+  late TextEditingController ownerNameController;
+  late TextEditingController ownerPhoneController;
+  late TextEditingController ownerEmailController;
+  late TextEditingController ownerAddressController;
 
   String? gender;
   String? speciesId;
   String? breedId;
+
+  @override
+  void initState() {
+    super.initState();
+    final pet = widget.pet;
+    if (widget.pet.imageUrl != null && widget.pet.imageUrl.startsWith('/')) {
+      _selectedImage = File(widget.pet.imageUrl);
+    }
+    petNameController = TextEditingController(text: pet.name);
+    ageController = TextEditingController(text: pet.age.toString() ?? '');
+    weightController = TextEditingController(text: pet.weight.toString() ?? '');
+    ownerNameController = TextEditingController(text: pet.ownerName);
+    ownerPhoneController = TextEditingController(text: pet.ownerPhone);
+    ownerEmailController = TextEditingController(text: pet.ownerEmail ?? '');
+    ownerAddressController = TextEditingController(text: pet.ownerAddress ?? '');
+    gender = pet.gender;
+    speciesId = pet.species ?? '';
+    breedId = pet.breed ?? '';
+  }
 
   Future<void> _pickImage() async {
     showModalBottomSheet(
@@ -63,11 +87,34 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
     );
   }
 
+  void _savePet() {
+    if (_formKey.currentState!.validate()) {
+      // final updatedPet = widget.pet.copyWith(
+      //   name: petNameController.text,
+      //   gender: gender!,
+      //   age: ageController.text,
+      //   weight: weightController.text,
+      //   speciesId: speciesId!,
+      //   breedId: breedId!,
+      //   ownerName: ownerNameController.text,
+      //   ownerPhone: ownerPhoneController.text,
+      //   ownerEmail: ownerEmailController.text,
+      //   ownerAddress: ownerAddressController.text,
+      //   image: _selectedImage,
+      // );
+
+      // TODO: Gửi updatedPet lên server hoặc xử lý tiếp
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Đã cập nhật hồ sơ thú cưng')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo hồ sơ thú cưng'),
+        title: const Text('Chỉnh sửa hồ sơ thú cưng'),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: SingleChildScrollView(
@@ -76,7 +123,6 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
           key: _formKey,
           child: Column(
             children: [
-              // Ảnh thú cưng
               GestureDetector(
                 onTap: _pickImage,
                 child: CircleAvatar(
@@ -92,27 +138,12 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
               const SizedBox(height: 16),
 
               _buildTextField('Tên thú cưng', petNameController),
-              _buildDropdownField(
-                label: 'Giới tính',
-                value: gender,
-                items: ['Đực', 'Cái'],
-                onChanged: (val) => setState(() => gender = val),
-              ),
+              _buildDropdownField('Giới tính', gender, ['Đực', 'Cái'], (val) => setState(() => gender = val)),
               _buildTextField('Tuổi (năm)', ageController, isNumber: true),
               _buildTextField('Cân nặng (kg)', weightController, isNumber: true),
 
-              _buildDropdownField(
-                label: 'Loài',
-                value: speciesId,
-                items: ['Dog', 'Cat', 'Bird'],
-                onChanged: (val) => setState(() => speciesId = val),
-              ),
-              _buildDropdownField(
-                label: 'Giống',
-                value: breedId,
-                items: ['Golden', 'Poodle', 'Persian'],
-                onChanged: (val) => setState(() => breedId = val),
-              ),
+              _buildDropdownField('Loài', speciesId, ['Dog', 'Cat', 'Bird'], (val) => setState(() => speciesId = val)),
+              _buildDropdownField('Giống', breedId, ['Golden', 'Poodle', 'Persian'], (val) => setState(() => breedId = val)),
 
               const Divider(height: 32),
               const Text('Thông tin chủ nuôi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -121,7 +152,6 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
               _buildTextField('SĐT', ownerPhoneController, isNumber: true),
               _buildTextField('Email', ownerEmailController, isRequired: false),
               _buildTextField('Địa chỉ', ownerAddressController, isRequired: false),
-
             ],
           ),
         ),
@@ -130,21 +160,15 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã lưu hồ sơ thú cưng thành công')),
-                );
-              }
-            },
+            onPressed: _savePet,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 6, 25, 81),
+              backgroundColor: const Color.fromARGB(255, 6, 25, 81),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            icon: const Icon(Icons.check_circle, color: Colors.white),
+            icon: const Icon(Icons.save, color: Colors.white),
             label: const Text(
-              'Lưu hồ sơ',
+              'Lưu thay đổi',
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
@@ -170,12 +194,12 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
     );
   }
 
-  Widget _buildDropdownField({
-    required String label,
-    required String? value,
-    required List<String> items,
-    required Function(String?) onChanged,
-  }) {
+  Widget _buildDropdownField(
+      String label,
+      String? value,
+      List<String> items,
+      void Function(String?) onChanged,
+      ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<String>(
