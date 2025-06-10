@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/settings.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:meow_n_woof/services/auth_service.dart'; // Import AuthService
 import '../views/login.dart';
 
 class PopupMenuWidget extends StatelessWidget {
-  const PopupMenuWidget({super.key});
+  PopupMenuWidget({super.key});
+
+  // Khởi tạo AuthService một lần để sử dụng (BỎ 'const' ở đây)
+  final AuthService _authService = AuthService(); // <-- Sửa đổi tại đây
 
   Future<void> _logout(BuildContext context) async {
-    // Hiển thị snackbar
+    await _authService.logout();
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text("Đăng xuất thành công"),
@@ -17,10 +21,8 @@ class PopupMenuWidget extends StatelessWidget {
       ),
     );
 
-    // Đăng xuất và điều hướng về trang login
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
-    await Future.delayed(const Duration(seconds: 2)); // chờ snackbar hiển thị
+    await Future.delayed(const Duration(seconds: 2));
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -47,7 +49,7 @@ class PopupMenuWidget extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.settings),
-              SizedBox(width: 8.0),
+              SizedBox(width: 8.0), // Thêm SizedBox bị thiếu ở đây
               Text('Cài đặt'),
             ],
           ),

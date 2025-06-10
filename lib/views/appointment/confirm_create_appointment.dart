@@ -40,7 +40,7 @@ class ConfirmCreateAppointmentScreen extends StatelessWidget {
                   Divider(thickness: 1.2),
                   _buildInfoRow(Icons.access_time, "Thời gian",
                       selectedDateTime != null
-                          ? "${selectedDateTime!.day}/${selectedDateTime!.month}/${selectedDateTime!.year} lúc ${selectedDateTime!.hour}:${selectedDateTime!.minute.toString().padLeft(2, '0')}"
+                          ? "${selectedDateTime.day}/${selectedDateTime.month}/${selectedDateTime.year} lúc ${selectedDateTime.hour}:${selectedDateTime.minute.toString().padLeft(2, '0')}"
                           : "Chưa chọn"
                   ),
                 ],

@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:meow_n_woof/models/user.dart'; // <-- RẤT QUAN TRỌNG: Import model User
+import 'package:intl/intl.dart'; // Import intl để định dạng ngày tháng
 
 class EditUserProfilePage extends StatefulWidget {
-  final Map<String, dynamic> userData;
+  // THAY ĐỔI KIỂU DỮ LIỆU TỪ Map<String, dynamic> SANG User
+  final User userData;
 
   const EditUserProfilePage({super.key, required this.userData});
 
@@ -19,17 +22,27 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController phoneController;
-  late TextEditingController birthController;
+  late TextEditingController birthController; // Để hiển thị và nhập ngày sinh
   late TextEditingController addressController;
+
+  // Biến để lưu trữ DateTime cho ngày sinh, giúp dễ dàng xử lý hơn
+  DateTime? _selectedBirthDate;
 
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.userData['full_name']);
-    emailController = TextEditingController(text: widget.userData['email']);
-    phoneController = TextEditingController(text: widget.userData['phone']);
-    birthController = TextEditingController(text: widget.userData['birth']);
-    addressController = TextEditingController(text: widget.userData['address']);
+    // Khởi tạo controllers với dữ liệu từ User object
+    nameController = TextEditingController(text: widget.userData.fullName);
+    emailController = TextEditingController(text: widget.userData.email);
+    phoneController = TextEditingController(text: widget.userData.phone);
+    addressController = TextEditingController(text: widget.userData.address);
+
+    _selectedBirthDate = widget.userData.birth;
+    birthController = TextEditingController(
+      text: _selectedBirthDate != null
+          ? DateFormat('dd/MM/yyyy').format(_selectedBirthDate!)
+          : '',
+    );
   }
 
   Future<void> _pickImage() async {
@@ -71,12 +84,39 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     );
   }
 
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedBirthDate ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+      locale: const Locale('vi', 'VN'), // Đảm bảo hiển thị lịch bằng tiếng Việt
+    );
+    if (picked != null && picked != _selectedBirthDate) {
+      setState(() {
+        _selectedBirthDate = picked;
+        birthController.text = DateFormat('dd/MM/yyyy').format(_selectedBirthDate!);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    birthController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final avatarProvider = _selectedImage != null
         ? FileImage(_selectedImage!)
-        : (widget.userData['avatarURL'] != null && widget.userData['avatarURL'].toString().isNotEmpty)
-        ? NetworkImage(widget.userData['avatarURL'])
+    // Sử dụng widget.userData.avatarURL! để truy cập URL từ User object
+        : (widget.userData.avatarURL != null && widget.userData.avatarURL!.isNotEmpty)
+        ? NetworkImage(widget.userData.avatarURL!)
         : const AssetImage('assets/images/avatar.png') as ImageProvider;
 
     return Scaffold(
@@ -96,8 +136,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                   radius: 60,
                   backgroundImage: avatarProvider,
                   child: _selectedImage == null &&
-                      (widget.userData['avatarURL'] == null ||
-                          widget.userData['avatarURL'].toString().isEmpty)
+                      (widget.userData.avatarURL == null ||
+                          widget.userData.avatarURL!.isEmpty)
                       ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white70)
                       : null,
                 ),
@@ -106,7 +146,24 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
               _buildTextField('Họ tên', nameController),
               _buildTextField('Email', emailController),
               _buildTextField('Số điện thoại', phoneController, isNumber: true),
-              _buildTextField('Ngày sinh', birthController),
+              // SỬA ĐỔI: Sử dụng GestureDetector để mở DatePicker
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: GestureDetector(
+                  onTap: () => _selectDate(context),
+                  child: AbsorbPointer( // Ngăn không cho bàn phím hiện ra khi chạm vào TextField
+                    child: TextFormField(
+                      controller: birthController,
+                      decoration: InputDecoration(
+                        labelText: 'Ngày sinh',
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                        suffixIcon: const Icon(Icons.calendar_today),
+                      ),
+                      validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng chọn ngày sinh' : null,
+                    ),
+                  ),
+                ),
+              ),
               _buildTextField('Địa chỉ', addressController),
             ],
           ),
@@ -118,9 +175,31 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           child: ElevatedButton.icon(
             onPressed: () {
               if (_formKey.currentState!.validate()) {
+                // TẠO ĐỐI TƯỢNG USER ĐÃ CẬP NHẬT
+                final updatedUser = User(
+                  employeeId: widget.userData.employeeId, // Giữ nguyên ID
+                  username: widget.userData.username, // Giữ nguyên username
+                  fullName: nameController.text,
+                  email: emailController.text,
+                  phone: phoneController.text,
+                  address: addressController.text,
+                  birth: _selectedBirthDate, // Sử dụng DateTime đã chọn
+                  role: widget.userData.role, // Giữ nguyên vai trò
+                  // Xử lý avatarURL: Nếu có _selectedImage mới, sử dụng nó, nếu không giữ nguyên cái cũ
+                  avatarURL: _selectedImage != null
+                      ? _selectedImage!.path // Đây sẽ là đường dẫn file cục bộ
+                      : widget.userData.avatarURL,
+                );
+
+                // TODO: Gọi API để lưu updatedUser vào backend
+                // Ví dụ: AuthService().updateUser(updatedUser);
+                print('User đã cập nhật: ${updatedUser.toJson()}');
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Đã lưu thông tin thành công')),
                 );
+                // Quay lại trang trước sau khi lưu
+                Navigator.pop(context);
               }
             },
             style: ElevatedButton.styleFrom(

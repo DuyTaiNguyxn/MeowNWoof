@@ -23,7 +23,7 @@ class _MedicineListPageState extends State<MedicineListPage> {
       'name': 'Fipronil Spray',
       'type': 'Trị ve rận',
       'expiryDate': '15/08/2024',
-      'image': 'https://example.com/fipronil.jpg',
+      'image': '',
     },
     {
       'name': 'Vaccine ABC',

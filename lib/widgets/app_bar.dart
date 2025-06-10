@@ -39,7 +39,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             const Spacer(),
-            action ?? const PopupMenuWidget(),
+            action ?? PopupMenuWidget(),
           ],
         ),
       ),

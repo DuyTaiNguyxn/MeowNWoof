@@ -1,17 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/user/edit_user_profile.dart';
+import 'package:intl/intl.dart'; // <-- Import thư viện intl
+import 'package:meow_n_woof/models/user.dart'; // <-- RẤT QUAN TRỌNG: Import model User
 
 class UserProfilePage extends StatelessWidget {
-  final Map<String, dynamic> userData;
+  // THAY ĐỔI KIỂU DỮ LIỆU TỪ Map<String, dynamic> SANG User
+  final User userData;
 
+  // Constructor giờ nhận đối tượng User
   const UserProfilePage({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
-    final avatarProvider = (userData['avatarURL'] != null &&
-        userData['avatarURL'].toString().isNotEmpty)
-        ? NetworkImage(userData['avatarURL'])
+    // Truy cập các thuộc tính của User object trực tiếp
+    final avatarProvider = (userData.avatarURL != null &&
+        userData.avatarURL!.isNotEmpty) // Sử dụng userData.avatarURL!
+        ? NetworkImage(userData.avatarURL!) // Sử dụng userData.avatarURL!
         : const AssetImage('assets/images/avatar.png') as ImageProvider;
+
+    // Định dạng ngày sinh
+    String formattedBirthDate = '';
+    if (userData.birth != null) { // Truy cập userData.birth (là DateTime?)
+      try {
+        // userData.birth đã là DateTime, không cần parse lại
+        formattedBirthDate = DateFormat('dd/MM/yyyy').format(userData.birth!);
+      } catch (e) {
+        print('Lỗi định dạng ngày sinh trong UserProfilePage: ${userData.birth} - $e');
+        formattedBirthDate = 'Không hợp lệ';
+      }
+    } else {
+      formattedBirthDate = 'Chưa cập nhật';
+    }
+
+    // Truy cập userData.role (là String?)
+    final localizedRole = _getLocalizedRole(userData.role);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6FD),
@@ -39,7 +61,7 @@ class UserProfilePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    userData['full_name'] ?? '',
+                    userData.fullName ?? 'Chưa cập nhật', // Truy cập userData.fullName
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -47,7 +69,7 @@ class UserProfilePage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    userData['role'] ?? '',
+                    localizedRole,
                     style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
@@ -69,11 +91,11 @@ class UserProfilePage extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      _buildInfoTile(Icons.email, 'Email', userData['email']),
-                      _buildInfoTile(Icons.phone, 'Số điện thoại', userData['phone']),
-                      _buildInfoTile(Icons.cake, 'Ngày sinh', userData['birth']),
-                      _buildInfoTile(Icons.location_on, 'Địa chỉ', userData['address']),
-                      _buildInfoTile(Icons.person, 'Tên đăng nhập', userData['username']),
+                      _buildInfoTile(Icons.email, 'Email', userData.email), // Truy cập userData.email
+                      _buildInfoTile(Icons.phone, 'Số điện thoại', userData.phone), // Truy cập userData.phone
+                      _buildInfoTile(Icons.cake, 'Ngày sinh', formattedBirthDate),
+                      _buildInfoTile(Icons.location_on, 'Địa chỉ', userData.address), // Truy cập userData.address
+                      _buildInfoTile(Icons.person, 'Tên đăng nhập', userData.username), // Truy cập userData.username
                     ],
                   ),
                 ),
@@ -92,7 +114,10 @@ class UserProfilePage extends StatelessWidget {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => EditUserProfilePage(userData: userData)),
+                          MaterialPageRoute(
+                            // TRUYỀN TRỰC TIẾP USER OBJECT SANG EditUserProfilePage
+                            builder: (context) => EditUserProfilePage(userData: userData),
+                          ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
@@ -136,7 +161,7 @@ class UserProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoTile(IconData icon, String title, dynamic value) {
+  Widget _buildInfoTile(IconData icon, String title, String? value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
@@ -150,12 +175,23 @@ class UserProfilePage extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              value?.toString() ?? '',
+              value ?? 'N/A',
               style: const TextStyle(color: Colors.black87),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _getLocalizedRole(String? role) {
+    switch (role) {
+      case 'staff':
+        return 'Nhân viên y tế';
+      case 'veterinarian':
+        return 'Bác sĩ thú y';
+      default:
+        return 'Người dùng';
+    }
   }
 }

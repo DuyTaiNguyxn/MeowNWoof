@@ -37,15 +37,15 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
       _selectedImage = File(widget.pet.imageUrl);
     }
     petNameController = TextEditingController(text: pet.name);
-    ageController = TextEditingController(text: pet.age.toString() ?? '');
-    weightController = TextEditingController(text: pet.weight.toString() ?? '');
+    ageController = TextEditingController(text: pet.age.toString());
+    weightController = TextEditingController(text: pet.weight.toString());
     ownerNameController = TextEditingController(text: pet.ownerName);
     ownerPhoneController = TextEditingController(text: pet.ownerPhone);
-    ownerEmailController = TextEditingController(text: pet.ownerEmail ?? '');
-    ownerAddressController = TextEditingController(text: pet.ownerAddress ?? '');
+    ownerEmailController = TextEditingController(text: pet.ownerEmail);
+    ownerAddressController = TextEditingController(text: pet.ownerAddress);
     gender = pet.gender;
-    speciesId = pet.species ?? '';
-    breedId = pet.breed ?? '';
+    speciesId = pet.species;
+    breedId = pet.breed;
   }
 
   Future<void> _pickImage() async {

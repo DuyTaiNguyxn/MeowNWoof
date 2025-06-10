@@ -6,40 +6,65 @@ import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
+import 'package:meow_n_woof/services/auth_service.dart';
+import 'package:meow_n_woof/models/user.dart'; // <-- Import model User
 
 class HomeTab extends StatefulWidget {
+  const HomeTab({super.key});
+
   @override
   State<HomeTab> createState() => _HomeTabState();
 }
 
 class _HomeTabState extends State<HomeTab> {
+  // GIỮ NGUYÊN DANH SÁCH PET GIẢ
   final List<Pet> _allPets = List.generate(
     20,
         (index) => Pet(
+      id: index + 1,
       name: 'Pet ${index + 1}',
       ownerName: 'Nguyễn Văn A',
       ownerPhone: '0123456789',
-      species: 'Dog',
-      breed: 'Poodle',
+      // Sửa đổi speciesId và breedId để khớp với model Pet (nếu có)
+          species: 'Dog',
+          breed: 'Poodle',// Thay bằng ID giống thực tế
       age: 2,
       gender: 'Đực',
       weight: 4.5,
-      ownerAddress: '',
-      ownerEmail: '',
-      imageUrl: '',
+      // Các trường ownerAddress và ownerEmail không có trong model Pet hiện tại của bạn
+      // imageUrl: '', // Nếu bạn có ảnh, hãy thêm vào đây
+      // createdAt: DateTime.now(), // Thêm nếu muốn
+      // updatedAt: DateTime.now(), // Thêm nếu muốn
+          ownerAddress: '',
+          ownerEmail: '',
+          imageUrl: '',
     ),
   );
 
   List<Pet> _filteredPets = [];
   TextEditingController _searchController = TextEditingController();
-
   String selectedFilter = 'Tên thú cưng';
+
+  // THAY ĐỔI KIỂU DỮ LIỆU TỪ Map<String, dynamic>? SANG User?
+  User? _currentUserData;
+  final AuthService _authService = AuthService();
 
   @override
   void initState() {
     super.initState();
     _filteredPets = List.from(_allPets);
     _searchController.addListener(_onSearch);
+    _loadUserData();
+  }
+
+  // Hàm tải thông tin user từ AuthService (giờ trả về User object)
+  Future<void> _loadUserData() async {
+    final user = await _authService.getUser(); // Nhận User object
+    if (mounted) {
+      setState(() {
+        _currentUserData = user; // Gán User object
+      });
+    }
   }
 
   void _onSearch() {
@@ -126,49 +151,70 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  String _getLocalizedRole(String? role) {
+    switch (role) {
+      case 'staff':
+        return 'Nhân viên y tế';
+      case 'veterinarian':
+        return 'Bác sĩ thú y';
+      default:
+        return 'Người dùng';
+    }
+  }
+
   Widget _buildUserHeader() {
+    // TRUY CẬP THUỘC TÍNH TRỰC TIẾP TỪ USER OBJECT
+    final userName = _currentUserData?.fullName ?? 'Guest';
+    final userRole = _getLocalizedRole(_currentUserData?.role);
+    final userAvatarUrl = _currentUserData?.avatarURL;
+
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => UserProfilePage(
-              userData: {
-                'full_name': 'Nguyễn Văn A',
-                'email': 'a@example.com',
-                'phone': '0123456789',
-                'birth': '1995-06-15',
-                'address': '123 Đường ABC, TP.HCM',
-                'role': 'Nhân viên y tế',
-                'avatarURL': '',
-                'username': 'nguyenvana',
-              },
+        if (_currentUserData != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => UserProfilePage(
+                userData: _currentUserData!, // TRUYỀN TRỰC TIẾP USER OBJECT
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Không thể hiển thị thông tin người dùng. Vui lòng thử lại.')),
+          );
+        }
       },
       child: Container(
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         child: Row(
           children: [
             CircleAvatar(
               radius: 32,
-              backgroundImage: AssetImage('assets/images/avatar.png'),
+              backgroundImage: userAvatarUrl != null && userAvatarUrl.isNotEmpty
+                  ? NetworkImage(userAvatarUrl) as ImageProvider<Object>
+                  : const AssetImage('assets/images/avatar.png'),
             ),
             const SizedBox(width: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text(
+              children: [
+                const Text(
                   'Xin chào,',
                   style: TextStyle(fontSize: 16),
                 ),
-                SizedBox(height: 4),
                 Text(
-                  'Nguyễn Văn A',
-                  style: TextStyle(
+                  userName,
+                  style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  userRole,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.blueGrey,
                   ),
                 ),
               ],
@@ -232,7 +278,7 @@ class _HomeTabState extends State<HomeTab> {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
               maxLines: 2,
             ),
           ],
@@ -259,14 +305,13 @@ class _HomeTabState extends State<HomeTab> {
                 child: TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.search),
+                    prefixIcon: const Icon(Icons.search),
                     hintText: 'Tìm kiếm hồ sơ pet...',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              // Thêm lựa chọn vào dropdown filter
               PopupMenuButton<String>(
                 icon: const Icon(Icons.filter_list),
                 onSelected: (value) {
@@ -299,7 +344,7 @@ class _HomeTabState extends State<HomeTab> {
           const SizedBox(height: 12),
           Expanded(
             child: _filteredPets.isEmpty
-                ? Center(child: Text('Không tìm thấy hồ sơ pet nào.'))
+                ? const Center(child: Text('Không tìm thấy hồ sơ pet nào.'))
                 : ListView.builder(
               itemCount: _filteredPets.length,
               itemBuilder: (context, index) {
@@ -310,16 +355,16 @@ class _HomeTabState extends State<HomeTab> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ListTile(
-                    leading: Icon(Icons.pets, size: 32),
+                    leading: const Icon(Icons.pets, size: 32),
                     title: Text(
                       pet.name,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     subtitle: Text(
-                      '${pet.ownerName} - 0123456789', // có thể thay bằng data thật nếu có
+                      '${pet.ownerName} - ${pet.ownerPhone}',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
                     onTap: () {

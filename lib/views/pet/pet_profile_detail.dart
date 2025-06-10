@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/pet.dart';
-import 'package:meow_n_woof/views/medical_record/create_medical_record.dart';
+import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
 import 'package:meow_n_woof/views/pet/edit_pet_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -83,7 +83,7 @@ class PetProfileDetail extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => CreateMedicalRecordScreen(selectedPet: pet),
+                            builder: (_) => MedicalRecordListPage(pet: pet),
                           ),
                         );
                       },

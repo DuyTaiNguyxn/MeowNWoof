@@ -19,6 +19,7 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
   final List<Pet> _allPets = List.generate(
     20,
         (index) => Pet(
+      id: index + 1,
       name: 'Pet ${index + 1}',
       ownerName: 'Nguyễn Văn A',
       ownerPhone: '0123456789',

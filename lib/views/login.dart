@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/forgot_password.dart';
+import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'home.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -13,8 +13,100 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final usernameController = TextEditingController();
-  final passwordController = TextEditingController();
+  final passwordController = TextEditingController(); // Mật khẩu không nên được lưu trực tiếp vì lý do bảo mật
   bool _obscurePassword = true;
+  final AuthService _authService = AuthService();
+  bool _isLoading = false;
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRememberMeData(); // <-- Đổi tên hàm để phản ánh việc tải cả username
+  }
+
+  // Hàm tải trạng thái "remember me" và username đã lưu
+  void _loadRememberMeData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Tải trạng thái checkbox "remember_me"
+    final rememberMeSaved = prefs.getBool('remember_me') ?? false;
+    setState(() {
+      _rememberMe = rememberMeSaved;
+    });
+
+    // Nếu "remember me" đã được chọn, tải username
+    if (rememberMeSaved) {
+      final savedUsername = prefs.getString('saved_username');
+      if (savedUsername != null) {
+        usernameController.text = savedUsername;
+      }
+      // KHÔNG NÊN lưu hoặc tải mật khẩu trực tiếp vào TextField vì lý do bảo mật
+      // Người dùng vẫn nên nhập lại mật khẩu hoặc sử dụng cơ chế đăng nhập tự động bằng token.
+    }
+
+    // Kiểm tra token để tự động đăng nhập nếu có "remember me"
+    final token = await _authService.getToken();
+    if (rememberMeSaved && token != null) {
+      // Nếu "remember me" đã được chọn và có token, tự động chuyển hướng
+      // Bạn có thể thêm logic kiểm tra token có còn hợp lệ không nếu muốn
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    }
+  }
+
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
+
+    try {
+      final response = await _authService.login(username, password);
+
+      // Lưu trạng thái "remember me"
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('remember_me', _rememberMe);
+
+      // Nếu "remember me" được chọn, lưu username
+      if (_rememberMe) {
+        await prefs.setString('saved_username', username);
+      } else {
+        // Nếu không chọn "remember me", xóa username đã lưu (nếu có)
+        await prefs.remove('saved_username');
+      }
+      // KHÔNG LƯU MẬT KHẨU VÀO SHARED_PREFERENCES VÌ LÝ DO BẢO MẬT
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(response['message'] ?? 'Đăng nhập thành công!')),
+      );
+
+      // Chuyển hướng đến màn hình chính
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi đăng nhập: ${e.toString()}')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    usernameController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +119,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-
                 // Logo / Tên App
                 Image.asset('assets/images/logo.png', width: 200, height: 200,),
 
@@ -62,20 +153,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
-                      );
-                    },
-                    child: const Text(
-                      'Quên mật khẩu?',
-                      style: TextStyle(color: Colors.lightBlue),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _rememberMe,
+                          onChanged: (bool? newValue) {
+                            setState(() {
+                              _rememberMe = newValue ?? false;
+                            });
+                          },
+                        ),
+                        const Text('Ghi nhớ tôi'),
+                      ],
                     ),
-                  ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ForgotPasswordPage()),
+                        );
+                      },
+                      child: const Text(
+                        'Quên mật khẩu?',
+                        style: TextStyle(color: Colors.lightBlue),
+                      ),
+                    ),
+                  ],
                 ),
 
                 const SizedBox(height: 24),
@@ -84,18 +190,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () async {
-                      // TODO: Thêm xử lý đăng nhập ở đây
-                      final username = usernameController.text.trim();
-                      final password = passwordController.text.trim();
-                      print("Đăng nhập với $username - $password");
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('isLoggedIn', true);
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomeScreen()),
-                      );
-                    },
+                    onPressed: _isLoading ? null : _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightBlue,
                       foregroundColor: Colors.white,
@@ -104,12 +199,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: const Text('Đăng nhập', style: TextStyle(fontSize: 16)),
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Đăng nhập', style: TextStyle(fontSize: 16)),
                   ),
                 ),
 
                 const SizedBox(height: 16),
-
               ],
             ),
           ),

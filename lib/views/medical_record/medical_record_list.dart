@@ -197,11 +197,39 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold, fontSize: 16)),
                             const SizedBox(height: 6),
-                            Text('👨‍⚕️ Bác sĩ: ${record['veterinarian']}'),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
+                                  TextSpan(
+                                    text: record['veterinarian'],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blueAccent,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                             const SizedBox(height: 6),
                             Text('🤒 Triệu chứng: ${record['symptoms']}'),
                             const SizedBox(height: 6),
-                            Text('📝 Chẩn đoán: ${record['diagnosis']}'),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '📝 Chẩn đoán: '),
+                                  TextSpan(
+                                    text: record['diagnosis'],
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),

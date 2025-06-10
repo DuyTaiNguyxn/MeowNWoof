@@ -1,4 +1,5 @@
 class Pet {
+  final int id;
   final String name;
   final String ownerName;
   final String ownerPhone;
@@ -12,6 +13,7 @@ class Pet {
   final String imageUrl;
 
   Pet({
+    required this.id,
     required this.name,
     required this.ownerName,
     required this.ownerPhone,
