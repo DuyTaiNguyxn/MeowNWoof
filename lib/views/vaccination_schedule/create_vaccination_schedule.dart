@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
 import 'package:meow_n_woof/views/vaccination_schedule/confirm_create_vaccination_schedule.dart';
-import 'package:meow_n_woof/widgets/date_picker_widget.dart';
+import 'package:meow_n_woof/widgets/date_time_picker_widget.dart'; // Đảm bảo đã import widget đúng
 import 'package:meow_n_woof/widgets/disease_prevented_widget.dart';
 import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 import 'package:provider/provider.dart';
@@ -16,14 +16,36 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
   int _currentPage = 0;
 
   void _nextPage() {
+    // Thêm logic kiểm tra điều kiện trước khi chuyển trang
+    final vaccinationProvider = Provider.of<VaccinationScheduleProvider>(context, listen: false);
+
+    if (_currentPage == 0 && vaccinationProvider.selectedPet == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn thú cưng.')),
+      );
+      return;
+    }
+    if (_currentPage == 1 && vaccinationProvider.diseasePrevented == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn bệnh cần phòng ngừa.')),
+      );
+      return;
+    }
+    if (_currentPage == 2 && vaccinationProvider.selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn ngày và giờ tiêm phòng.')),
+      );
+      return;
+    }
+
     if (_currentPage < 3) {
-      _pageController.nextPage(duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pageController.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     }
   }
 
   void _prevPage() {
     if (_currentPage > 0) {
-      _pageController.previousPage(duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
+      _pageController.previousPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
     }
   }
 
@@ -37,7 +59,7 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Tạo Lịch Tiêm phòng'),
+          title: const Text('Tạo Lịch Tiêm phòng'),
           backgroundColor: Colors.lightBlueAccent,
         ),
         body: Column(
@@ -45,7 +67,7 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
             Expanded(
               child: PageView(
                 controller: _pageController,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(), // Không cho phép vuốt để chuyển trang
                 onPageChanged: (index) => setState(() => _currentPage = index),
                 children: [
                   PetSelectionWidget(
@@ -58,9 +80,13 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
                     diseasePrevented: vaccinationProvider.diseasePrevented,
                     onDiseaseChanged: (disease) => vaccinationProvider.setDiseasePrevented(disease),
                   ),
-                  DatePickerWidget(
-                    dateSelected: vaccinationProvider.selectedDate,
-                    onDateSelected: (dateTime) => vaccinationProvider.setSelectedDateTime(dateTime),
+                  // SỬA Ở ĐÂY: Thêm thuộc tính `label`
+                  DateTimePickerWidget(
+                    label: 'Ngày & giờ tiêm phòng', // <-- Thêm label ở đây
+                    dateTimeSelected: vaccinationProvider.selectedDate,
+                    onDateTimeSelected: (dateTime){
+                      vaccinationProvider.setSelectedDateTime(dateTime!);
+                    },
                   ),
                   ConfirmCreateVaccinationScheduleScreen(),
                 ],
@@ -80,12 +106,12 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text('<', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                      child: const Text('<', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     ),
-                  Spacer(),
+                  const Spacer(),
                   if (_currentPage < 3)
                     ElevatedButton(
-                      onPressed: _nextPage,
+                      onPressed: _nextPage, // Gọi _nextPage() với logic kiểm tra điều kiện
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
                         foregroundColor: Colors.white,
@@ -93,16 +119,24 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text('>', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                      child: const Text('>', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     ),
                   if (_currentPage == 3)
                     ElevatedButton(
                       onPressed: () {
-                        // Có thể xử lý lưu vào CSDL
-                        vaccinationProvider.reset();
+                        // Logic lưu lịch tiêm chủng vào CSDL
+                        // Truy cập các giá trị từ provider:
+                        // final selectedPet = vaccinationProvider.selectedPet;
+                        // final diseasePrevented = vaccinationProvider.diseasePrevented;
+                        // final selectedDate = vaccinationProvider.selectedDate;
+
+                        // TODO: Gọi API hoặc lưu vào CSDL ở đây
+
+                        vaccinationProvider.reset(); // Reset provider sau khi tạo thành công
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Đã xác nhận tạo lịch tiêm chủng!')),
+                          const SnackBar(content: Text('Đã xác nhận tạo lịch tiêm chủng!')),
                         );
+                        // Có thể thêm Navigator.pop(context) để quay về màn hình trước
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.lightBlue,
@@ -111,7 +145,7 @@ class _CreateVaccinationScheduleScreenState extends State<CreateVaccinationSched
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text('Xác nhận', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                      child: const Text('Xác nhận', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                     ),
                 ],
               ),

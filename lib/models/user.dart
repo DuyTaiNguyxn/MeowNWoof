@@ -38,7 +38,6 @@ class User {
   // Phương thức để chuyển đổi User object thành Map (JSON) nếu cần gửi lên backend
   Map<String, dynamic> toJson() {
     return {
-      'employee_id': employeeId,
       'username': username,
       'full_name': fullName,
       'email': email,

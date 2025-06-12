@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/user/edit_user_profile.dart';
-import 'package:intl/intl.dart'; // <-- Import thư viện intl
-import 'package:meow_n_woof/models/user.dart'; // <-- RẤT QUAN TRỌNG: Import model User
+import 'package:intl/intl.dart';
+import 'package:meow_n_woof/models/user.dart';
 
 class UserProfilePage extends StatelessWidget {
-  // THAY ĐỔI KIỂU DỮ LIỆU TỪ Map<String, dynamic> SANG User
   final User userData;
 
   // Constructor giờ nhận đối tượng User
@@ -12,17 +11,14 @@ class UserProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Truy cập các thuộc tính của User object trực tiếp
     final avatarProvider = (userData.avatarURL != null &&
-        userData.avatarURL!.isNotEmpty) // Sử dụng userData.avatarURL!
-        ? NetworkImage(userData.avatarURL!) // Sử dụng userData.avatarURL!
+        userData.avatarURL!.isNotEmpty)
+        ? NetworkImage(userData.avatarURL!)
         : const AssetImage('assets/images/avatar.png') as ImageProvider;
 
-    // Định dạng ngày sinh
     String formattedBirthDate = '';
-    if (userData.birth != null) { // Truy cập userData.birth (là DateTime?)
+    if (userData.birth != null) {
       try {
-        // userData.birth đã là DateTime, không cần parse lại
         formattedBirthDate = DateFormat('dd/MM/yyyy').format(userData.birth!);
       } catch (e) {
         print('Lỗi định dạng ngày sinh trong UserProfilePage: ${userData.birth} - $e');
@@ -32,7 +28,6 @@ class UserProfilePage extends StatelessWidget {
       formattedBirthDate = 'Chưa cập nhật';
     }
 
-    // Truy cập userData.role (là String?)
     final localizedRole = _getLocalizedRole(userData.role);
 
     return Scaffold(
@@ -61,7 +56,7 @@ class UserProfilePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    userData.fullName ?? 'Chưa cập nhật', // Truy cập userData.fullName
+                    userData.fullName ?? 'Chưa cập nhật',
                     style: const TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -91,11 +86,11 @@ class UserProfilePage extends StatelessWidget {
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     children: [
-                      _buildInfoTile(Icons.email, 'Email', userData.email), // Truy cập userData.email
-                      _buildInfoTile(Icons.phone, 'Số điện thoại', userData.phone), // Truy cập userData.phone
+                      _buildInfoTile(Icons.email, 'Email', userData.email),
+                      _buildInfoTile(Icons.phone, 'Số điện thoại', userData.phone),
                       _buildInfoTile(Icons.cake, 'Ngày sinh', formattedBirthDate),
-                      _buildInfoTile(Icons.location_on, 'Địa chỉ', userData.address), // Truy cập userData.address
-                      _buildInfoTile(Icons.person, 'Tên đăng nhập', userData.username), // Truy cập userData.username
+                      _buildInfoTile(Icons.location_on, 'Địa chỉ', userData.address),
+                      _buildInfoTile(Icons.person, 'Tên đăng nhập', userData.username),
                     ],
                   ),
                 ),
@@ -115,7 +110,6 @@ class UserProfilePage extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            // TRUYỀN TRỰC TIẾP USER OBJECT SANG EditUserProfilePage
                             builder: (context) => EditUserProfilePage(userData: userData),
                           ),
                         );

@@ -11,6 +11,18 @@ class PetProfileDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Truy cập thông tin chủ nuôi một cách an toàn
+    final ownerName = pet.owner?.ownerName ?? 'Chưa cập nhật';
+    final ownerPhone = pet.owner?.phone ?? 'Chưa cập nhật';
+    final ownerEmail = pet.owner?.email ?? 'Chưa cập nhật';
+    final ownerAddress = pet.owner?.address ?? 'Chưa cập nhật';
+
+    // Truy cập tên loài và giống một cách an toàn từ các object nhúng
+    final speciesName = pet.species?.speciesName ?? 'Chưa cập nhật';
+    final breedName = pet.breed?.breedName ?? 'Chưa cập nhật';
+
+    print('Pet ID: ${pet.petId}');
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chi tiết hồ sơ thú cưng'),
@@ -24,19 +36,21 @@ class PetProfileDetail extends StatelessWidget {
             const SizedBox(height: 20),
             const Text('Thông tin thú cưng', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const Divider(),
-            _buildDetailRow('Tên:', pet.name),
-            _buildDetailRow('Loài:', pet.species),
-            _buildDetailRow('Giống:', pet.breed),
-            _buildDetailRow('Giới tính:', pet.gender),
-            _buildDetailRow('Tuổi:', '${pet.age} tuổi'),
-            _buildDetailRow('Cân nặng:', '${pet.weight.toStringAsFixed(2)} kg'),
+            _buildDetailRow('Tên:', pet.petName),
+            // HIỂN THỊ TÊN LOÀI THAY VÌ ID
+            _buildDetailRow('Loài:', speciesName),
+            // HIỂN THỊ TÊN GIỐNG THAY VÌ ID
+            _buildDetailRow('Giống:', breedName),
+            _buildDetailRow('Giới tính:', pet.gender ?? 'Chưa cập nhật'),
+            _buildDetailRow('Tuổi:', pet.age != null ? '${pet.age} tuổi' : 'Chưa cập nhật'),
+            _buildDetailRow('Cân nặng:', pet.weight != null ? '${pet.weight!.toStringAsFixed(2)} kg' : 'Chưa cập nhật'),
             const SizedBox(height: 20),
             const Text('Thông tin chủ nuôi', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const Divider(),
-            _buildDetailRow('Họ tên:', pet.ownerName),
-            _buildDetailRow('SĐT:', pet.ownerPhone),
-            _buildDetailRow('Email:', pet.ownerEmail),
-            _buildDetailRow('Địa chỉ:', pet.ownerAddress),
+            _buildDetailRow('Họ tên:', ownerName),
+            _buildDetailRow('SĐT:', ownerPhone),
+            _buildDetailRow('Email:', ownerEmail),
+            _buildDetailRow('Địa chỉ:', ownerAddress),
           ],
         ),
       ),
@@ -102,13 +116,24 @@ class PetProfileDetail extends StatelessWidget {
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        final phoneUri = Uri(scheme: 'tel', path: pet.ownerPhone);
-                        if (await canLaunchUrl(phoneUri)) {
-                          await launchUrl(phoneUri);
+                        // Kiểm tra xem ownerPhone có giá trị không rỗng trước khi gọi
+                        if (ownerPhone.isNotEmpty && ownerPhone != 'Chưa cập nhật') {
+                          final phoneUri = Uri(scheme: 'tel', path: ownerPhone);
+                          if (await canLaunchUrl(phoneUri)) {
+                            await launchUrl(phoneUri);
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Không thể mở trình gọi điện')),
+                              );
+                            }
+                          }
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Không thể mở trình gọi điện')),
-                          );
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Không có số điện thoại để gọi')),
+                            );
+                          }
                         }
                       },
                       icon: const Icon(Icons.phone, color: Colors.white),
@@ -146,9 +171,9 @@ class PetProfileDetail extends StatelessWidget {
   Widget _buildPetImage() {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: pet.imageUrl.isNotEmpty
-          ? Image.network(pet.imageUrl, height: 200, width: double.infinity, fit: BoxFit.cover)
-          : Image.asset('assets/images/logo_bg.png', height: 200, width: double.infinity, fit: BoxFit.cover),
+      child: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+          ? Image.network(pet.imageUrl!, height: 300, width: double.infinity, fit: BoxFit.cover)
+          : Image.asset('assets/images/logo_bg.png', height: 300, width: double.infinity, fit: BoxFit.cover),
     );
   }
 }

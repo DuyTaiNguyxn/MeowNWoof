@@ -34,7 +34,7 @@ class ConfirmCreateAppointmentScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildInfoRow(Icons.pets, "Pet", selectedPet?.name ?? "Chưa chọn"),
+                  _buildInfoRow(Icons.pets, "Pet", selectedPet?.petName ?? "Chưa chọn"),
                   Divider(thickness: 1.2),
                   _buildInfoRow(Icons.medical_services, "Bác sĩ", selectedVeterinarian ?? "Chưa chọn"),
                   Divider(thickness: 1.2),

@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/models/species.dart';
+import 'package:meow_n_woof/models/breed.dart';
+import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/services/species_breed_service.dart';
+import 'package:meow_n_woof/widgets/image_picker_widget.dart';
+import 'package:meow_n_woof/services/image_upload_service.dart';
 
 class EditPetProfilePage extends StatefulWidget {
   final Pet pet;
@@ -15,103 +21,225 @@ class EditPetProfilePage extends StatefulWidget {
 class _EditPetProfilePageState extends State<EditPetProfilePage> {
   final _formKey = GlobalKey<FormState>();
   File? _selectedImage;
-  final picker = ImagePicker();
+  String? _currentImageUrl;
 
   late TextEditingController petNameController;
   late TextEditingController ageController;
   late TextEditingController weightController;
-  late TextEditingController ownerNameController;
-  late TextEditingController ownerPhoneController;
-  late TextEditingController ownerEmailController;
-  late TextEditingController ownerAddressController;
 
   String? gender;
-  String? speciesId;
-  String? breedId;
+  int? _selectedSpeciesId;
+  int? _selectedBreedId;
+
+  List<Species> _availableSpecies = [];
+  List<Breed> _availableBreeds = [];
+  bool _isLoadingDropdowns = true;
+  String? _dropdownErrorMessage;
+
+  final PetService _petService = PetService();
+  final SpeciesBreedService _speciesBreedService = SpeciesBreedService();
+  final ImageUploadService _imageUploadService = ImageUploadService();
 
   @override
   void initState() {
     super.initState();
     final pet = widget.pet;
-    if (widget.pet.imageUrl != null && widget.pet.imageUrl.startsWith('/')) {
-      _selectedImage = File(widget.pet.imageUrl);
-    }
-    petNameController = TextEditingController(text: pet.name);
-    ageController = TextEditingController(text: pet.age.toString());
-    weightController = TextEditingController(text: pet.weight.toString());
-    ownerNameController = TextEditingController(text: pet.ownerName);
-    ownerPhoneController = TextEditingController(text: pet.ownerPhone);
-    ownerEmailController = TextEditingController(text: pet.ownerEmail);
-    ownerAddressController = TextEditingController(text: pet.ownerAddress);
+
+    _currentImageUrl = pet.imageUrl;
+
+    petNameController = TextEditingController(text: pet.petName);
+    ageController = TextEditingController(text: pet.age?.toString() ?? '');
+    weightController = TextEditingController(text: pet.weight?.toStringAsFixed(2) ?? '');
+
     gender = pet.gender;
-    speciesId = pet.species;
-    breedId = pet.breed;
+    _selectedSpeciesId = pet.species?.speciesId;
+    _selectedBreedId = pet.breed?.breedId;
+
+    _loadDropdownData();
+  }
+
+  Future<void> _loadDropdownData() async {
+    setState(() {
+      _isLoadingDropdowns = true;
+      _dropdownErrorMessage = null;
+    });
+
+    try {
+      _availableSpecies = await _speciesBreedService.getSpecies();
+
+      if (_selectedSpeciesId != null) {
+        _availableBreeds = await _speciesBreedService.getBreedsBySpeciesId(_selectedSpeciesId!);
+        if (!_availableBreeds.any((b) => b.breedId == _selectedBreedId)) {
+          _selectedBreedId = null;
+        }
+      } else {
+        _availableBreeds = [];
+      }
+
+      if (mounted) {
+        setState(() {
+          _isLoadingDropdowns = false;
+        });
+      }
+    } on SocketException {
+      if (mounted) {
+        setState(() {
+          _dropdownErrorMessage = 'Không có kết nối Internet.';
+          _isLoadingDropdowns = false;
+        });
+      }
+      _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
+    } on http.ClientException catch (e) {
+      if (mounted) {
+        setState(() {
+          _dropdownErrorMessage = 'Lỗi kết nối server: ${e.message}';
+          _isLoadingDropdowns = false;
+        });
+      }
+      _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _dropdownErrorMessage = 'Lỗi tải dữ liệu ban đầu: ${e.toString()}';
+          _isLoadingDropdowns = false;
+        });
+      }
+      _showSnackBar('Lỗi tải dữ liệu ban đầu: ${e.toString()}');
+    }
+  }
+
+  void _onSpeciesChanged(int? newSpeciesId) {
+    setState(() {
+      _selectedSpeciesId = newSpeciesId;
+      _selectedBreedId = null;
+      _availableBreeds.clear();
+      _dropdownErrorMessage = null;
+
+      if (newSpeciesId != null) {
+        _isLoadingDropdowns = true;
+        print('Đang tải giống cho Species ID: $newSpeciesId');
+        _speciesBreedService.getBreedsBySpeciesId(newSpeciesId).then((breeds) {
+          if (mounted) {
+            setState(() {
+              _availableBreeds = breeds;
+              _isLoadingDropdowns = false;
+              print('Đã tải ${breeds.length} giống cho Species ID: $newSpeciesId');
+              for (var breed in breeds) {
+                print('  - Giống: ${breed.breedName} (ID: ${breed.breedId}, Species ID: ${breed.speciesId})');
+              }
+            });
+          }
+        }).catchError((error) {
+          if (mounted) {
+            setState(() {
+              _dropdownErrorMessage = error.toString();
+              _isLoadingDropdowns = false;
+            });
+            _showSnackBar('Không tải được giống: ${error.toString()}');
+            print('Lỗi khi tải giống: $error');
+          }
+        });
+      } else {
+        _isLoadingDropdowns = false;
+        _availableBreeds = [];
+      }
+    });
   }
 
   Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Chụp ảnh'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    setState(() => _selectedImage = File(pickedFile.path));
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Chọn từ thư viện'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    setState(() => _selectedImage = File(pickedFile.path));
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    final File? pickedImage = await ImagePickerWidget.showImageSourceSelectionSheet(context);
+    if (pickedImage != null) {
+      setState(() {
+        _selectedImage = pickedImage;
+        _currentImageUrl = null;
+      });
+    }
   }
 
-  void _savePet() {
-    if (_formKey.currentState!.validate()) {
-      // final updatedPet = widget.pet.copyWith(
-      //   name: petNameController.text,
-      //   gender: gender!,
-      //   age: ageController.text,
-      //   weight: weightController.text,
-      //   speciesId: speciesId!,
-      //   breedId: breedId!,
-      //   ownerName: ownerNameController.text,
-      //   ownerPhone: ownerPhoneController.text,
-      //   ownerEmail: ownerEmailController.text,
-      //   ownerAddress: ownerAddressController.text,
-      //   image: _selectedImage,
-      // );
-
-      // TODO: Gửi updatedPet lên server hoặc xử lý tiếp
+  void _showSnackBar(String message) {
+    if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Đã cập nhật hồ sơ thú cưng')),
+        SnackBar(content: Text(message)),
       );
     }
   }
 
+  Future<void> _savePet() async {
+    if (_formKey.currentState!.validate()) {
+      _showSnackBar('Đang lưu hồ sơ thú cưng...');
+
+      String? finalImageUrl = _currentImageUrl;
+      try {
+        if (_selectedImage != null) {
+          finalImageUrl = await _imageUploadService.uploadImage(
+            imageFile: _selectedImage!,
+            uploadPreset: 'pet_unsigned_upload',
+            folder: 'pet_images',
+          );
+          _showSnackBar('Đã tải ảnh mới lên Cloudinary thành công.');
+        }
+      } on SocketException {
+        _showSnackBar('Không có kết nối Internet khi tải ảnh. Vui lòng kiểm tra lại mạng của bạn.');
+        return;
+      } on http.ClientException catch (e) {
+        _showSnackBar('Lỗi kết nối server khi tải ảnh: ${e.message}');
+        print('Cloudinary upload error: $e');
+        return;
+      } catch (e) {
+        _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}');
+        print('Cloudinary upload error: $e');
+        return;
+      }
+
+      final updatedPet = Pet(
+        petId: widget.pet.petId,
+        petName: petNameController.text,
+        speciesId: _selectedSpeciesId,
+        breedId: _selectedBreedId,
+        age: int.tryParse(ageController.text),
+        gender: gender,
+        weight: double.tryParse(weightController.text),
+        imageUrl: finalImageUrl,
+        ownerId: widget.pet.ownerId,
+      );
+
+      try {
+        await _petService.updatePet(updatedPet);
+
+        if (mounted) {
+          _showSnackBar('Đã cập nhật hồ sơ thú cưng thành công!');
+          Navigator.pop(context, true);
+        }
+      } on SocketException {
+        _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
+      } on http.ClientException {
+        _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
+      } catch (e) {
+        _showSnackBar('Lỗi khi cập nhật hồ sơ: ${e.toString()}');
+        print('Error updating pet: $e');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    petNameController.dispose();
+    ageController.dispose();
+    weightController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final ImageProvider petImageProvider;
+    if (_selectedImage != null) {
+      petImageProvider = FileImage(_selectedImage!);
+    } else if (_currentImageUrl != null && _currentImageUrl!.isNotEmpty) {
+      petImageProvider = NetworkImage(_currentImageUrl!);
+    } else {
+      petImageProvider = const AssetImage('assets/images/logo_bg.png');
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chỉnh sửa hồ sơ thú cưng'),
@@ -127,10 +255,8 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundImage: _selectedImage != null
-                      ? FileImage(_selectedImage!)
-                      : const AssetImage('assets/images/pet.png') as ImageProvider,
-                  child: _selectedImage == null
+                  backgroundImage: petImageProvider,
+                  child: (_selectedImage == null && (_currentImageUrl == null || _currentImageUrl!.isEmpty))
                       ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white70)
                       : null,
                 ),
@@ -138,20 +264,45 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
               const SizedBox(height: 16),
 
               _buildTextField('Tên thú cưng', petNameController),
-              _buildDropdownField('Giới tính', gender, ['Đực', 'Cái'], (val) => setState(() => gender = val)),
+              _buildDropdownField<String>(
+                  'Giới tính',
+                  gender,
+                  ['Đực', 'Cái']
+                      .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                      .toList(),
+                      (val) => setState(() => gender = val)),
               _buildTextField('Tuổi (năm)', ageController, isNumber: true),
               _buildTextField('Cân nặng (kg)', weightController, isNumber: true),
 
-              _buildDropdownField('Loài', speciesId, ['Dog', 'Cat', 'Bird'], (val) => setState(() => speciesId = val)),
-              _buildDropdownField('Giống', breedId, ['Golden', 'Poodle', 'Persian'], (val) => setState(() => breedId = val)),
+              // Dropdown cho Loài
+              _isLoadingDropdowns
+                  ? const Center(child: CircularProgressIndicator())
+                  : _dropdownErrorMessage != null
+                  ? Text('Lỗi tải dữ liệu: $_dropdownErrorMessage', style: const TextStyle(color: Colors.red))
+                  : _buildDropdownField<int>(
+                'Loài',
+                _selectedSpeciesId,
+                _availableSpecies
+                    .map((s) => DropdownMenuItem(value: s.speciesId, child: Text(s.speciesName)))
+                    .toList(),
+                _onSpeciesChanged,
+              ),
 
-              const Divider(height: 32),
-              const Text('Thông tin chủ nuôi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              // Dropdown cho Giống
+              if (_selectedSpeciesId != null)
+                _isLoadingDropdowns
+                    ? const Center(child: CircularProgressIndicator())
+                    : _dropdownErrorMessage != null && _availableBreeds.isEmpty
+                    ? Text('Lỗi tải giống: $_dropdownErrorMessage', style: const TextStyle(color: Colors.red))
+                    : _buildDropdownField<int>(
+                  'Giống',
+                  _selectedBreedId,
+                  _availableBreeds
+                      .map((b) => DropdownMenuItem(value: b.breedId, child: Text(b.breedName)))
+                      .toList(),
+                      (val) => setState(() => _selectedBreedId = val),
+                ),
 
-              _buildTextField('Tên', ownerNameController),
-              _buildTextField('SĐT', ownerPhoneController, isNumber: true),
-              _buildTextField('Email', ownerEmailController, isRequired: false),
-              _buildTextField('Địa chỉ', ownerAddressController, isRequired: false),
             ],
           ),
         ),
@@ -177,40 +328,41 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool isNumber = false, bool isRequired = true}) {
+  // Các phương thức _buildTextField và _buildDropdownField giữ nguyên
+  Widget _buildTextField(String label, TextEditingController controller,
+      {bool isNumber = false, bool isRequired = true}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        controller: controller,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        validator: isRequired
-            ? (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập $label' : null
-            : null,
-      ),
-    );
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: TextFormField(
+          controller: controller,
+          keyboardType: isNumber ? TextInputType.number : TextInputType.text,
+          decoration: InputDecoration(
+            labelText: label,
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          validator: isRequired
+              ? (value) => (value == null || value.isEmpty) ? 'Vui lòng nhập $label' : null
+              : null,
+        ));
   }
 
-  Widget _buildDropdownField(
+  Widget _buildDropdownField<T>(
       String label,
-      String? value,
-      List<String> items,
-      void Function(String?) onChanged,
+      T? value,
+      List<DropdownMenuItem<T>> items,
+      void Function(T?)? onChanged,
       ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
+      child: DropdownButtonFormField<T>(
         value: value,
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        items: items,
         onChanged: onChanged,
-        validator: (value) => (value == null || value.isEmpty) ? 'Chọn $label' : null,
+        validator: (value) => (value == null) ? 'Vui lòng chọn $label' : null,
       ),
     );
   }

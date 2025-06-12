@@ -99,7 +99,7 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hồ Sơ Khám Bệnh - ${widget.pet.name}'),
+        title: Text('Hồ Sơ Khám Bệnh - ${widget.pet.petName}'),
         centerTitle: true,
         backgroundColor: Colors.lightBlueAccent,
       ),

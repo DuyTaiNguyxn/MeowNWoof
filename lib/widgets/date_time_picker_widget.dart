@@ -1,153 +1,116 @@
+// File: lib/widgets/date_time_picker_widget.dart (hoặc tên bạn đã đặt)
 import 'package:flutter/material.dart';
-import 'package:flutter_datetime_picker_plus/flutter_datetime_picker_plus.dart' as picker;
+import 'package:intl/intl.dart';
 
-class DateTimePickerWidget extends StatefulWidget {
-  final DateTime? dateTimeSelected;
-  final Function(DateTime) onDateTimeSelected;
+class DateTimePickerWidget extends StatefulWidget { // Đổi tên class nếu bạn muốn dùng tên này
+  final String label; // Nhãn cho input field
+  final DateTime? dateTimeSelected; // Giá trị DateTime hiện tại
+  final ValueChanged<DateTime?> onDateTimeSelected; // Callback khi ngày giờ thay đổi
 
   const DateTimePickerWidget({
-    Key? key,
-    required this.dateTimeSelected,
-    required this.onDateTimeSelected,
-  }) : super(key: key);
+    super.key,
+    required this.label,
+    this.dateTimeSelected, // Có thể null
+    required this.onDateTimeSelected, // Bắt buộc
+  });
 
   @override
   State<DateTimePickerWidget> createState() => _DateTimePickerWidgetState();
 }
 
 class _DateTimePickerWidgetState extends State<DateTimePickerWidget> {
-  DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
+  final TextEditingController _dateTimeController = TextEditingController();
+  DateTime? _internalSelectedDateTime; // Biến nội bộ để quản lý trạng thái
 
   @override
   void initState() {
     super.initState();
-    if (widget.dateTimeSelected != null) {
-      _selectedDate = widget.dateTimeSelected;
-      _selectedTime = TimeOfDay.fromDateTime(widget.dateTimeSelected!);
+    _internalSelectedDateTime = widget.dateTimeSelected;
+    if (_internalSelectedDateTime != null) {
+      _dateTimeController.text = DateFormat('dd/MM/yyyy HH:mm').format(_internalSelectedDateTime!);
     }
   }
 
-  void _combineDateTimeIfReady() {
-    if (_selectedDate != null && _selectedTime != null) {
-      final combined = DateTime(
-        _selectedDate!.year,
-        _selectedDate!.month,
-        _selectedDate!.day,
-        _selectedTime!.hour,
-        _selectedTime!.minute,
+  @override
+  void didUpdateWidget(covariant DateTimePickerWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Cập nhật internalSelectedDateTime nếu giá trị bên ngoài thay đổi
+    if (widget.dateTimeSelected != oldWidget.dateTimeSelected) {
+      _internalSelectedDateTime = widget.dateTimeSelected;
+      _dateTimeController.text = _internalSelectedDateTime != null
+          ? DateFormat('dd/MM/yyyy HH:mm').format(_internalSelectedDateTime!)
+          : '';
+    }
+  }
+
+  Future<void> _selectDateTime(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: _internalSelectedDateTime ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+      locale: const Locale('vi', 'VN'),
+    );
+
+    if (pickedDate != null) {
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: _internalSelectedDateTime != null
+            ? TimeOfDay.fromDateTime(_internalSelectedDateTime!)
+            : TimeOfDay.now(),
+        builder: (BuildContext context, Widget? child) {
+          return MediaQuery(
+            data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+            child: child!,
+          );
+        },
       );
-      widget.onDateTimeSelected(combined);
+
+      if (pickedTime != null) {
+        setState(() {
+          _internalSelectedDateTime = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+          _dateTimeController.text = DateFormat('dd/MM/yyyy HH:mm').format(_internalSelectedDateTime!);
+          widget.onDateTimeSelected(_internalSelectedDateTime); // GỌI CALLBACK ĐỂ TRUYỀN GIÁ TRỊ RA NGOÀI
+        });
+      }
     }
   }
 
-  void _showDatePicker() {
-    picker.DatePicker.showDatePicker(
-      context,
-      showTitleActions: true,
-      minTime: DateTime.now(),
-      maxTime: DateTime(2100, 12, 31),
-      onConfirm: (date) {
-        setState(() {
-          _selectedDate = date;
-        });
-        _combineDateTimeIfReady();
-      },
-      currentTime: _selectedDate ?? DateTime.now(),
-      locale: picker.LocaleType.vi,
-    );
-  }
-
-  void _showTimePicker() {
-    picker.DatePicker.showTimePicker(
-      context,
-      showTitleActions: true,
-      onConfirm: (time) {
-        setState(() {
-          _selectedTime = TimeOfDay(hour: time.hour, minute: time.minute);
-        });
-        _combineDateTimeIfReady();
-      },
-      currentTime: _selectedDate ?? DateTime.now(),
-      locale: picker.LocaleType.vi,
-    );
+  @override
+  void dispose() {
+    _dateTimeController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final dateText = _selectedDate == null
-        ? 'Chọn ngày...'
-        : '${_selectedDate!.day.toString().padLeft(2, '0')}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.year}';
-
-    final timeText = _selectedTime == null
-        ? 'Chọn giờ...'
-        : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}';
-
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          const Center(
-            child: Text(
-              'Chọn Ngày & Giờ',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+      padding: const EdgeInsets.all(16.0),
+      child: GestureDetector(
+        onTap: () => _selectDateTime(context),
+        child: AbsorbPointer(
+          child: TextFormField(
+            controller: _dateTimeController,
+            decoration: InputDecoration(
+              labelText: widget.label, // Sử dụng label từ constructor
+              hintText: 'dd/MM/yyyy HH:mm',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              suffixIcon: const Icon(Icons.calendar_month),
             ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Vui lòng chọn ngày và giờ';
+              }
+              return null;
+            },
           ),
-          const SizedBox(height: 20),
-          GestureDetector(
-            onTap: _showDatePicker,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today, color: Colors.blue),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      dateText,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: _selectedDate == null ? Colors.grey : Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: _showTimePicker,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.grey),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.access_time, color: Colors.green),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      timeText,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: _selectedTime == null ? Colors.grey : Colors.black,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

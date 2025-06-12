@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'dart:io';
+import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/models/pet_owner.dart';
+import 'package:meow_n_woof/models/species.dart';
+import 'package:meow_n_woof/models/breed.dart';
+import 'package:meow_n_woof/services/image_upload_service.dart';
+import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/services/species_breed_service.dart';
+import 'package:meow_n_woof/widgets/image_picker_widget.dart';
 
 class CreatePetProfilePage extends StatefulWidget {
+  const CreatePetProfilePage({super.key});
+
   @override
   State<CreatePetProfilePage> createState() => _CreatePetProfilePageState();
 }
@@ -10,7 +20,7 @@ class CreatePetProfilePage extends StatefulWidget {
 class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
   final _formKey = GlobalKey<FormState>();
   File? _selectedImage;
-  final picker = ImagePicker();
+  // final picker = ImagePicker(); // Không cần dùng trực tiếp nữa
 
   final TextEditingController petNameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
@@ -21,46 +31,188 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
   final TextEditingController ownerAddressController = TextEditingController();
 
   String? gender;
-  String? speciesId;
-  String? breedId;
+  int? _selectedSpeciesId;
+  int? _selectedBreedId;
 
+  List<Species> _availableSpecies = [];
+  List<Breed> _availableBreeds = [];
+  bool _isLoadingDropdowns = true;
+  String? _dropdownErrorMessage;
+
+  final PetService _petService = PetService();
+  final SpeciesBreedService _speciesBreedService = SpeciesBreedService();
+  final ImageUploadService _imageUploadService = ImageUploadService();
+  // Không cần khởi tạo ImagePickingService ở đây nếu dùng hàm static
+  // final ImagePickingService _imagePickingService = ImagePickingService(); // Bỏ dòng này
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDropdownData();
+  }
+
+  Future<void> _loadDropdownData() async {
+    setState(() {
+      _isLoadingDropdowns = true;
+      _dropdownErrorMessage = null;
+    });
+
+    try {
+      _availableSpecies = await _speciesBreedService.getSpecies();
+      _availableBreeds = []; // Luôn khởi tạo rỗng
+      if (mounted) {
+        setState(() {
+          _isLoadingDropdowns = false;
+        });
+      }
+    } on SocketException {
+      if (mounted) {
+        setState(() {
+          _dropdownErrorMessage = 'Không có kết nối Internet.';
+          _isLoadingDropdowns = false;
+        });
+      }
+      _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
+    } on http.ClientException catch (e) {
+      if (mounted) {
+        setState(() {
+          _dropdownErrorMessage = 'Lỗi kết nối server: ${e.message}';
+          _isLoadingDropdowns = false;
+        });
+      }
+      _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _dropdownErrorMessage = 'Lỗi tải dữ liệu ban đầu: ${e.toString()}';
+          _isLoadingDropdowns = false;
+        });
+      }
+      _showSnackBar('Lỗi tải dữ liệu ban đầu: ${e.toString()}');
+    }
+  }
+
+  void _onSpeciesChanged(int? newSpeciesId) {
+    setState(() {
+      _selectedSpeciesId = newSpeciesId;
+      _selectedBreedId = null; // Reset giống khi thay đổi loài
+      _availableBreeds.clear(); // Xóa danh sách giống cũ ngay lập tức
+      _dropdownErrorMessage = null; // Reset thông báo lỗi cho dropdown
+
+      if (newSpeciesId != null) {
+        _isLoadingDropdowns = true; // Bắt đầu tải giống mới
+        _speciesBreedService.getBreedsBySpeciesId(newSpeciesId).then((breeds) {
+          if (mounted) {
+            setState(() {
+              _availableBreeds = breeds;
+              _isLoadingDropdowns = false; // Kết thúc tải
+            });
+          }
+        }).catchError((error) {
+          if (mounted) {
+            setState(() {
+              _dropdownErrorMessage = error.toString();
+              _isLoadingDropdowns = false; // Kết thúc tải với lỗi
+            });
+          }
+          if (error is SocketException) {
+            _showSnackBar('Không có kết nối Internet khi tải giống. Vui lòng kiểm tra lại mạng của bạn.');
+          } else if (error is http.ClientException) {
+            _showSnackBar('Lỗi kết nối server khi tải giống. Vui lòng thử lại sau.');
+          } else {
+            _showSnackBar('Không tải được giống: ${error.toString()}');
+          }
+        });
+      } else {
+        _isLoadingDropdowns = false; // Nếu không chọn loài nào, dừng loading và không tải giống
+        _availableBreeds = []; // Đảm bảo danh sách giống rỗng
+      }
+    });
+  }
+
+  // Sửa hàm _pickImage để gọi ImagePickingService
   Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Chụp ảnh'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    setState(() => _selectedImage = File(pickedFile.path));
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Chọn từ thư viện'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    setState(() => _selectedImage = File(pickedFile.path));
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    final File? pickedImage = await ImagePickerWidget.showImageSourceSelectionSheet(context);
+    if (pickedImage != null) {
+      setState(() {
+        _selectedImage = pickedImage;
+      });
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  Future<void> _createPet() async {
+    if (_formKey.currentState!.validate()) {
+      _showSnackBar('Đang tạo hồ sơ thú cưng...');
+
+      final newOwner = PetOwner(
+        ownerName: ownerNameController.text,
+        phone: ownerPhoneController.text,
+        email: ownerEmailController.text.isNotEmpty ? ownerEmailController.text : null,
+        address: ownerAddressController.text.isNotEmpty ? ownerAddressController.text : null,
+      );
+
+      String? imageUrlToSave;
+      try {
+        if (_selectedImage != null) {
+          imageUrlToSave = await _imageUploadService.uploadImage(
+            imageFile: _selectedImage!,
+            uploadPreset: 'pet_unsigned_upload',
+            folder: 'pet_images',
+          );
+          print('Đã tải ảnh lên Cloudinary thành công.');
+        }
+      } catch (e) {
+        print('Cloudinary upload error: $e');
+        return;
+      }
+
+      final newPet = Pet(
+        petName: petNameController.text,
+        speciesId: _selectedSpeciesId,
+        breedId: _selectedBreedId,
+        age: int.tryParse(ageController.text),
+        gender: gender,
+        weight: double.tryParse(weightController.text),
+        imageUrl: imageUrlToSave,
+        owner: newOwner,
+      );
+
+      try {
+        await _petService.createPet(newPet);
+
+        if (mounted) {
+          _showSnackBar('Đã tạo hồ sơ thú cưng thành công!');
+          Navigator.pop(context, true);
+        }
+      } on SocketException {
+        _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
+      } on http.ClientException {
+        _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
+      } catch (e) {
+        _showSnackBar('Lỗi khi tạo hồ sơ: ${e.toString()}');
+        print('Error creating pet: $e');
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    petNameController.dispose();
+    ageController.dispose();
+    weightController.dispose();
+    ownerNameController.dispose();
+    ownerPhoneController.dispose();
+    ownerEmailController.dispose();
+    ownerAddressController.dispose();
+    super.dispose();
   }
 
   @override
@@ -83,7 +235,7 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
                   radius: 60,
                   backgroundImage: _selectedImage != null
                       ? FileImage(_selectedImage!)
-                      : const AssetImage('assets/images/pet.png') as ImageProvider,
+                      : const AssetImage('assets/images/logo_bg.png') as ImageProvider,
                   child: _selectedImage == null
                       ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white70)
                       : null,
@@ -92,27 +244,45 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
               const SizedBox(height: 16),
 
               _buildTextField('Tên thú cưng', petNameController),
-              _buildDropdownField(
+              _buildDropdownField<String>(
                 label: 'Giới tính',
                 value: gender,
-                items: ['Đực', 'Cái'],
+                items: ['Đực', 'Cái']
+                    .map((e) => DropdownMenuItem<String>(value: e, child: Text(e)))
+                    .toList(),
                 onChanged: (val) => setState(() => gender = val),
               ),
               _buildTextField('Tuổi (năm)', ageController, isNumber: true),
               _buildTextField('Cân nặng (kg)', weightController, isNumber: true),
 
-              _buildDropdownField(
+              // Dropdown cho Loài
+              _isLoadingDropdowns
+                  ? const Center(child: CircularProgressIndicator())
+                  : _dropdownErrorMessage != null
+                  ? Text('Lỗi tải dữ liệu: $_dropdownErrorMessage', style: const TextStyle(color: Colors.red))
+                  : _buildDropdownField<int>(
                 label: 'Loài',
-                value: speciesId,
-                items: ['Dog', 'Cat', 'Bird'],
-                onChanged: (val) => setState(() => speciesId = val),
+                value: _selectedSpeciesId,
+                items: _availableSpecies
+                    .map((s) => DropdownMenuItem(value: s.speciesId, child: Text(s.speciesName)))
+                    .toList(),
+                onChanged: _onSpeciesChanged,
               ),
-              _buildDropdownField(
-                label: 'Giống',
-                value: breedId,
-                items: ['Golden', 'Poodle', 'Persian'],
-                onChanged: (val) => setState(() => breedId = val),
-              ),
+
+              // Dropdown cho Giống: CHỈ HIỂN THỊ KHI _selectedSpeciesId ĐÃ CÓ GIÁ TRỊ VÀ KHÔNG ĐANG TẢI
+              if (_selectedSpeciesId != null)
+                _isLoadingDropdowns
+                    ? const Center(child: CircularProgressIndicator())
+                    : _dropdownErrorMessage != null && _availableBreeds.isEmpty
+                    ? Text('Lỗi tải giống: $_dropdownErrorMessage', style: const TextStyle(color: Colors.red))
+                    : _buildDropdownField<int>(
+                  label: 'Giống',
+                  value: _selectedBreedId,
+                  items: _availableBreeds
+                      .map((b) => DropdownMenuItem(value: b.breedId, child: Text(b.breedName)))
+                      .toList(),
+                  onChanged: (val) => setState(() => _selectedBreedId = val),
+                ),
 
               const Divider(height: 32),
               const Text('Thông tin chủ nuôi', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -130,21 +300,15 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã lưu hồ sơ thú cưng thành công')),
-                );
-              }
-            },
+            onPressed: _createPet,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Color.fromARGB(255, 6, 25, 81),
+              backgroundColor: const Color.fromARGB(255, 6, 25, 81),
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             icon: const Icon(Icons.check_circle, color: Colors.white),
             label: const Text(
-              'Lưu hồ sơ',
+              'Tạo hồ sơ',
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
           ),
@@ -170,23 +334,23 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
     );
   }
 
-  Widget _buildDropdownField({
+  Widget _buildDropdownField<T>({
     required String label,
-    required String? value,
-    required List<String> items,
-    required Function(String?) onChanged,
+    required T? value,
+    required List<DropdownMenuItem<T>> items,
+    required void Function(T?)? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: DropdownButtonFormField<String>(
+      child: DropdownButtonFormField<T>(
         value: value,
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        items: items,
         onChanged: onChanged,
-        validator: (value) => (value == null || value.isEmpty) ? 'Chọn $label' : null,
+        validator: (value) => (value == null) ? 'Chọn $label' : null,
       ),
     );
   }

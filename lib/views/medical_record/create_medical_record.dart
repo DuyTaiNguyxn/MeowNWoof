@@ -14,7 +14,7 @@ class CreateMedicalRecordScreen extends StatelessWidget {
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: Center(
-        child: Text('Đang tạo hồ sơ cho: ${selectedPet.name}'),
+        child: Text('Đang tạo hồ sơ cho: ${selectedPet.petName}'),
       ),
     );
   }

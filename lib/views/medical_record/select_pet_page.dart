@@ -2,21 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/pet.dart';
 import 'package:meow_n_woof/services/pet_service.dart'; // Import PetService
 
-class PetSelectionWidget extends StatefulWidget {
+class SelectPetPage extends StatefulWidget {
   final Pet? selectedPet;
   final Function(Pet) onPetSelected;
 
-  const PetSelectionWidget({
+  const SelectPetPage({
     Key? key,
     required this.selectedPet,
     required this.onPetSelected,
   }) : super(key: key);
 
   @override
-  State<PetSelectionWidget> createState() => _PetSelectionWidgetState();
+  State<SelectPetPage> createState() => _SelectPetPageState();
 }
 
-class _PetSelectionWidgetState extends State<PetSelectionWidget> {
+class _SelectPetPageState extends State<SelectPetPage> {
   // Thay thế dữ liệu hardcoded bằng danh sách rỗng, sẽ tải từ API
   List<Pet> _allPets = [];
   List<Pet> _filteredPets = [];
@@ -91,18 +91,15 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chọn thú cưng'),
+        backgroundColor: Colors.lightBlueAccent,
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            const Center(
-              child: Text(
-                'Chọn Thú cưng',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
             const SizedBox(height: 20),
             Row(
               children: [

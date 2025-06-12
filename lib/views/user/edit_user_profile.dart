@@ -1,11 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:meow_n_woof/models/user.dart'; // <-- RẤT QUAN TRỌNG: Import model User
-import 'package:intl/intl.dart'; // Import intl để định dạng ngày tháng
+import 'package:meow_n_woof/models/user.dart';
+import 'package:intl/intl.dart';
 
 class EditUserProfilePage extends StatefulWidget {
-  // THAY ĐỔI KIỂU DỮ LIỆU TỪ Map<String, dynamic> SANG User
   final User userData;
 
   const EditUserProfilePage({super.key, required this.userData});
@@ -22,10 +21,9 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   late TextEditingController nameController;
   late TextEditingController emailController;
   late TextEditingController phoneController;
-  late TextEditingController birthController; // Để hiển thị và nhập ngày sinh
+  late TextEditingController birthController;
   late TextEditingController addressController;
 
-  // Biến để lưu trữ DateTime cho ngày sinh, giúp dễ dàng xử lý hơn
   DateTime? _selectedBirthDate;
 
   @override
@@ -88,9 +86,9 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     final DateTime? picked = await showDatePicker(
       context: context,
       initialDate: _selectedBirthDate ?? DateTime.now(),
-      firstDate: DateTime(1900),
+      firstDate: DateTime(1950),
       lastDate: DateTime.now(),
-      locale: const Locale('vi', 'VN'), // Đảm bảo hiển thị lịch bằng tiếng Việt
+      locale: const Locale('vi', 'VN'),
     );
     if (picked != null && picked != _selectedBirthDate) {
       setState(() {
@@ -114,7 +112,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   Widget build(BuildContext context) {
     final avatarProvider = _selectedImage != null
         ? FileImage(_selectedImage!)
-    // Sử dụng widget.userData.avatarURL! để truy cập URL từ User object
         : (widget.userData.avatarURL != null && widget.userData.avatarURL!.isNotEmpty)
         ? NetworkImage(widget.userData.avatarURL!)
         : const AssetImage('assets/images/avatar.png') as ImageProvider;
@@ -146,12 +143,11 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
               _buildTextField('Họ tên', nameController),
               _buildTextField('Email', emailController),
               _buildTextField('Số điện thoại', phoneController, isNumber: true),
-              // SỬA ĐỔI: Sử dụng GestureDetector để mở DatePicker
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: GestureDetector(
                   onTap: () => _selectDate(context),
-                  child: AbsorbPointer( // Ngăn không cho bàn phím hiện ra khi chạm vào TextField
+                  child: AbsorbPointer(
                     child: TextFormField(
                       controller: birthController,
                       decoration: InputDecoration(
@@ -175,19 +171,17 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           child: ElevatedButton.icon(
             onPressed: () {
               if (_formKey.currentState!.validate()) {
-                // TẠO ĐỐI TƯỢNG USER ĐÃ CẬP NHẬT
                 final updatedUser = User(
-                  employeeId: widget.userData.employeeId, // Giữ nguyên ID
-                  username: widget.userData.username, // Giữ nguyên username
+                  employeeId: widget.userData.employeeId,
+                  username: widget.userData.username,
                   fullName: nameController.text,
                   email: emailController.text,
                   phone: phoneController.text,
                   address: addressController.text,
-                  birth: _selectedBirthDate, // Sử dụng DateTime đã chọn
-                  role: widget.userData.role, // Giữ nguyên vai trò
-                  // Xử lý avatarURL: Nếu có _selectedImage mới, sử dụng nó, nếu không giữ nguyên cái cũ
+                  birth: _selectedBirthDate,
+                  role: widget.userData.role,
                   avatarURL: _selectedImage != null
-                      ? _selectedImage!.path // Đây sẽ là đường dẫn file cục bộ
+                      ? _selectedImage!.path
                       : widget.userData.avatarURL,
                 );
 
@@ -198,7 +192,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Đã lưu thông tin thành công')),
                 );
-                // Quay lại trang trước sau khi lưu
                 Navigator.pop(context);
               }
             },
