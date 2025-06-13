@@ -110,18 +110,29 @@ class PetService {
   // Cập nhật thông tin Pet (YÊU CẦU XÁC THỰC TOKEN)
   Future<Pet> updatePet(Pet pet) async {
     try {
-      final headers = await _getHeadersWithAuth(); // Lấy headers kèm token
+      final headers = await _getHeadersWithAuth();
+
+      Map<String, dynamic> petData = pet.toJson();
+
+      petData.remove('owner');
+
+      final petDataJson = jsonEncode(petData);
+
+      print('DEBUG: Data being sent for update: $petDataJson'); // Để kiểm tra payload
+
       final response = await http.put(
         Uri.parse('$_baseUrl/pets/${pet.petId}'),
-        headers: headers, // Sử dụng headers đã có token
-        body: jsonEncode(pet.toJson()),
+        headers: headers,
+        body: petDataJson, // Sử dụng chuỗi JSON đã chỉnh sửa
       );
 
       print('DEBUG: updatePet Status Code: ${response.statusCode}');
       print('DEBUG: updatePet Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        return Pet.fromJson(jsonDecode(response.body));
+        final Map<String, dynamic> responseBodyMap = jsonDecode(response.body);
+        print('DEBUG: JSON received from backend for Pet conversion: $responseBodyMap');
+        return Pet.fromJson(responseBodyMap);
       } else {
         String errorMessage = 'Failed to update pet';
         try {

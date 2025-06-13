@@ -6,7 +6,7 @@ import 'package:meow_n_woof/views/medical_record/create_medical_record.dart';
 class MedicalRecordListPage extends StatefulWidget {
   final Pet pet;
 
-  const MedicalRecordListPage({Key? key, required this.pet}) : super(key: key);
+  const MedicalRecordListPage({super.key, required this.pet});
 
   @override
   State<MedicalRecordListPage> createState() => _MedicalRecordListPageState();
@@ -180,7 +180,7 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                       ),
                     ],
                   ),
-                  child: Container(
+                  child: SizedBox(
                     width: double.infinity,
                     child: Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

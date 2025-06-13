@@ -7,10 +7,10 @@ class PetSelectionWidget extends StatefulWidget {
   final Function(Pet) onPetSelected;
 
   const PetSelectionWidget({
-    Key? key,
+    super.key,
     required this.selectedPet,
     required this.onPetSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<PetSelectionWidget> createState() => _PetSelectionWidgetState();

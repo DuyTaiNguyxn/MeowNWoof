@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/medicine/medicine_detail.dart';
 
 class MedicineListPage extends StatefulWidget {
-  const MedicineListPage({Key? key}) : super(key: key);
+  const MedicineListPage({super.key});
 
   @override
   State<MedicineListPage> createState() => _MedicineListPageState();

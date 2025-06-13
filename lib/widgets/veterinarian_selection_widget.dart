@@ -5,10 +5,10 @@ class VeterinarianSelectionWidget extends StatefulWidget {
   final Function(String) onVeterinarianSelected;
 
   const VeterinarianSelectionWidget({
-    Key? key,
+    super.key,
     required this.selectedVet,
     required this.onVeterinarianSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<VeterinarianSelectionWidget> createState() => _VeterinarianSelectionWidgetState();

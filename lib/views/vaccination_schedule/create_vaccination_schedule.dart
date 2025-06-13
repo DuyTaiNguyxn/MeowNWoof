@@ -7,6 +7,8 @@ import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 import 'package:provider/provider.dart';
 
 class CreateVaccinationScheduleScreen extends StatefulWidget {
+  const CreateVaccinationScheduleScreen({super.key});
+
   @override
   _CreateVaccinationScheduleScreenState createState() => _CreateVaccinationScheduleScreenState();
 }

@@ -7,6 +7,8 @@ import 'package:meow_n_woof/widgets/date_time_picker_widget.dart'; // Đảm b�
 import 'package:provider/provider.dart';
 
 class CreateAppointmentScreen extends StatefulWidget {
+  const CreateAppointmentScreen({super.key});
+
   @override
   _CreateAppointmentScreenState createState() => _CreateAppointmentScreenState();
 }

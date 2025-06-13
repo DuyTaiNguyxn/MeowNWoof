@@ -176,7 +176,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
             uploadPreset: 'pet_unsigned_upload',
             folder: 'pet_images',
           );
-          _showSnackBar('Đã tải ảnh mới lên Cloudinary thành công.');
+          print('Đã tải ảnh mới lên Cloudinary thành công.');
         }
       } on SocketException {
         _showSnackBar('Không có kết nối Internet khi tải ảnh. Vui lòng kiểm tra lại mạng của bạn.');
@@ -191,7 +191,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         return;
       }
 
-      final updatedPet = Pet(
+      final updatedPetData = Pet(
         petId: widget.pet.petId,
         petName: petNameController.text,
         speciesId: _selectedSpeciesId,
@@ -200,14 +200,16 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         gender: gender,
         weight: double.tryParse(weightController.text),
         imageUrl: finalImageUrl,
-        ownerId: widget.pet.ownerId,
       );
 
       try {
-        await _petService.updatePet(updatedPet);
+        // Gọi updatePet nhưng không hứng lấy kết quả trả về Pet nữa
+        // vì PetDetailPage sẽ tự tải lại.
+        await _petService.updatePet(updatedPetData);
 
         if (mounted) {
           _showSnackBar('Đã cập nhật hồ sơ thú cưng thành công!');
+          // TRUYỀN TRUE để báo cho trang trước biết là đã có cập nhật
           Navigator.pop(context, true);
         }
       } on SocketException {

@@ -46,7 +46,7 @@ class Pet {
       age: json['age'] != null ? int.tryParse(json['age'].toString()) : null,
       gender: json['gender'] as String?,
       weight: json['weight'] != null ? double.tryParse(json['weight'].toString()) : null,
-      imageUrl: json['imageURL'] as String?, // Đã sửa từ lần trước
+      imageUrl: json['imageURL'] as String?,
       ownerId: json['owner_id'] != null ? int.tryParse(json['owner_id'].toString()) : null,
       owner: json['owner'] != null ? PetOwner.fromJson(json['owner'] as Map<String, dynamic>) : null,
       species: json['species'] != null ? Species.fromJson(json['species'] as Map<String, dynamic>) : null,

@@ -3,7 +3,7 @@ import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
 import 'package:provider/provider.dart';
 
 class ConfirmCreateVaccinationScheduleScreen extends StatelessWidget {
-  const ConfirmCreateVaccinationScheduleScreen({Key? key}) : super(key: key);
+  const ConfirmCreateVaccinationScheduleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -3,7 +3,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:meow_n_woof/views/vaccination_schedule/create_vaccination_schedule.dart';
 
 class VaccinationScheduleTab extends StatefulWidget {
-  const VaccinationScheduleTab({Key? key}) : super(key: key);
+  const VaccinationScheduleTab({super.key});
 
   @override
   State<VaccinationScheduleTab> createState() => _VaccinationScheduleTabState();
@@ -151,7 +151,7 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
                         ),
                       ],
                     ),
-                    child: Container(
+                    child: SizedBox(
                       width: double.infinity,
                       child: Card(
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

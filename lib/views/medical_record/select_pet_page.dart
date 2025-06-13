@@ -7,10 +7,10 @@ class SelectPetPage extends StatefulWidget {
   final Function(Pet) onPetSelected;
 
   const SelectPetPage({
-    Key? key,
+    super.key,
     required this.selectedPet,
     required this.onPetSelected,
-  }) : super(key: key);
+  });
 
   @override
   State<SelectPetPage> createState() => _SelectPetPageState();

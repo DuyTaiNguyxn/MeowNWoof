@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class NotificationTab extends StatefulWidget {
+  const NotificationTab({super.key});
+
   @override
   State<NotificationTab> createState() => _NotificationTabState();
 }

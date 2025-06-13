@@ -3,7 +3,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:meow_n_woof/views/appointment/create_appointment.dart';
 
 class AppointmentTab extends StatefulWidget {
-  const AppointmentTab({Key? key}) : super(key: key);
+  const AppointmentTab({super.key});
 
   @override
   State<AppointmentTab> createState() => _AppointmentTabState();
@@ -156,7 +156,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
                         ),
                       ],
                     ),
-                    child: Container(
+                    child: SizedBox(
                       width: double.infinity,
                       child: Card(
                         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

@@ -52,7 +52,6 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  // HÀM MỚI: Tải danh sách thú cưng từ API
   Future<void> _loadPets() async {
     setState(() {
       _isLoadingPets = true;
@@ -82,6 +81,27 @@ class _HomeTabState extends State<HomeTab> {
           _errorMessage = e.toString();
           _isLoadingPets = false;
         });
+      }
+    }
+  }
+
+  Future<void> _handlePetSelect(Pet pet) async {
+    final bool? hasUpdated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PetProfileDetail(
+          petId: pet.petId!,
+          petName: pet.petName,
+        ),
+      ),
+    );
+
+    if (hasUpdated == true) {
+      await _loadPets();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Danh sách thú cưng đã được làm mới!')),
+        );
       }
     }
   }
@@ -138,6 +158,9 @@ class _HomeTabState extends State<HomeTab> {
         ),
       ),
     );
+
+    // Cần kiểm tra 'mounted' trước khi sử dụng context
+    if (!mounted) return;
 
     if (selectedPet != null) {
       Navigator.push(
@@ -411,7 +434,7 @@ class _HomeTabState extends State<HomeTab> {
                       backgroundImage: NetworkImage(pet.imageUrl!),
                       radius: 24,
                     )
-                        : const Icon(Icons.pets, size: 32),
+                        : const Icon(Icons.pets, size: 48),
                     title: Text(
                       pet.petName, // Đã đổi từ pet.name
                       style: const TextStyle(
@@ -424,14 +447,7 @@ class _HomeTabState extends State<HomeTab> {
                       '${pet.owner?.ownerName ?? 'N/A'} - ${pet.owner?.phone ?? 'N/A'}',
                       style: TextStyle(color: Colors.grey[700]),
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PetProfileDetail(pet: pet),
-                        ),
-                      );
-                    },
+                    onTap: () => _handlePetSelect(pet),
                   ),
                 );
               },

@@ -5,10 +5,10 @@ class DiseasePreventedWidget extends StatefulWidget {
   final Function(String) onDiseaseChanged;
 
   const DiseasePreventedWidget({
-    Key? key,
+    super.key,
     required this.diseasePrevented,
     required this.onDiseaseChanged,
-  }) : super(key: key);
+  });
 
   @override
   _DiseasePreventedWidgetState createState() => _DiseasePreventedWidgetState();

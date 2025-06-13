@@ -3,7 +3,7 @@ import 'package:meow_n_woof/providers/appointment_provider.dart';
 import 'package:provider/provider.dart';
 
 class ConfirmCreateAppointmentScreen extends StatelessWidget {
-  const ConfirmCreateAppointmentScreen({ Key? key }) : super(key: key);
+  const ConfirmCreateAppointmentScreen({ super.key });
 
   @override
   Widget build(BuildContext context) {
