@@ -7,8 +7,9 @@ import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
-import 'package:meow_n_woof/services/pet_service.dart'; // <-- Import PetService
+import 'package:meow_n_woof/services/pet_service.dart';
 import 'package:meow_n_woof/models/user.dart';
+import 'package:provider/provider.dart';
 
 class HomeTab extends StatefulWidget {
   const HomeTab({super.key});
@@ -18,38 +19,21 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  // DANH SÁCH PET SẼ LẤY TỪ API, KHÔNG CÒN HARDCODED
   List<Pet> _allPets = [];
   List<Pet> _filteredPets = [];
   final TextEditingController _searchController = TextEditingController();
   String selectedFilter = 'Tên thú cưng';
 
-  User? _currentUserData;
-  final AuthService _authService = AuthService();
-  final PetService _petService = PetService(); // <-- Khởi tạo PetService
+  final PetService _petService = PetService();
 
-  bool _isLoadingPets = true; // Biến trạng thái để hiển thị loading
-  String? _errorMessage; // Biến để hiển thị thông báo lỗi
+  bool _isLoadingPets = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearch);
-    _loadInitialData(); // Tải cả user data và pet data
-  }
-
-  Future<void> _loadInitialData() async {
-    await _loadUserData();
-    await _loadPets();
-  }
-
-  Future<void> _loadUserData() async {
-    final user = await _authService.getUser();
-    if (mounted) {
-      setState(() {
-        _currentUserData = user;
-      });
-    }
+    _loadPets();
   }
 
   Future<void> _loadPets() async {
@@ -63,15 +47,12 @@ class _HomeTabState extends State<HomeTab> {
         setState(() {
           _allPets = pets;
           _allPets.sort((a, b) {
-            // Cần đảm bảo rằng pet.createdAt không null hoặc có cách xử lý null
-            // Nếu created_at là String, bạn cần parse nó thành DateTime trước khi so sánh
-            // Nếu không có created_at, có thể dùng petId nếu nó tăng dần
             if (a.createdAt == null && b.createdAt == null) return 0;
-            if (a.createdAt == null) return 1; // Đặt b lên trước nếu a null
-            if (b.createdAt == null) return -1; // Đặt a lên trước nếu b null
+            if (a.createdAt == null) return 1;
+            if (b.createdAt == null) return -1;
             return b.createdAt!.compareTo(a.createdAt!); // Sắp xếp giảm dần
           });
-          _filteredPets = List.from(_allPets); // Khởi tạo filteredPets
+          _filteredPets = List.from(_allPets);
           _isLoadingPets = false;
         });
       }
@@ -140,7 +121,6 @@ class _HomeTabState extends State<HomeTab> {
       context,
       MaterialPageRoute(builder: (context) => CreatePetProfilePage()),
     );
-    // Nếu có kết quả và là true (tức là pet đã được tạo thành công), tải lại danh sách
     if (result == true) {
       _loadPets();
     }
@@ -214,64 +194,61 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildUserHeader() {
-    final userName = _currentUserData?.fullName ?? 'Guest';
-    final userRole = _getLocalizedRole(_currentUserData?.role);
-    final userAvatarUrl = _currentUserData?.avatarURL;
+    return Consumer<AuthService>(
+      builder: (context, authService, child) {
+        final currentUser = authService.currentUser;
+        final userName = currentUser?.fullName ?? 'Guest';
+        final userRole = _getLocalizedRole(currentUser?.role);
+        final userAvatarUrl = currentUser?.avatarURL;
 
-    return InkWell(
-      onTap: () {
-        if (_currentUserData != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => UserProfilePage(
-                userData: _currentUserData!,
+        return InkWell(
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const UserProfilePage(),
               ),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Không thể hiển thị thông tin người dùng. Vui lòng thử lại.')),
-          );
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 32,
-              backgroundImage: userAvatarUrl != null && userAvatarUrl.isNotEmpty
-                  ? NetworkImage(userAvatarUrl) as ImageProvider<Object>
-                  : const AssetImage('assets/images/avatar.png'),
-            ),
-            const SizedBox(width: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            child: Row(
               children: [
-                const Text(
-                  'Xin chào,',
-                  style: TextStyle(fontSize: 16),
+                CircleAvatar(
+                  radius: 32,
+                  backgroundImage: userAvatarUrl != null && userAvatarUrl.isNotEmpty
+                      ? NetworkImage(userAvatarUrl) as ImageProvider<Object>
+                      : const AssetImage('assets/images/avatar.png'),
                 ),
-                Text(
-                  userName,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  userRole,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.blueGrey,
-                  ),
+                const SizedBox(width: 20),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Xin chào,',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    Text(
+                      userName,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      userRole,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.blueGrey,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 

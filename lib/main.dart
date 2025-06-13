@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:meow_n_woof/app_settings.dart';
 import 'package:meow_n_woof/providers/appointment_provider.dart';
 import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
+import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/views/login.dart';
 import 'package:meow_n_woof/views/home.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,7 @@ void main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => appSettings),
+        ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => VaccinationScheduleProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
       ],

@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 class User {
   final int? employeeId;
   final String username;
@@ -31,21 +33,21 @@ class User {
       address: json['address'] as String?,
       role: json['role'] as String?,
       avatarURL: json['avatarURL'] as String?,
-      birth: json['birth'] != null ? DateTime.tryParse(json['birth'].toString()) : null,
+      birth: json['birth'] != null ? DateTime.parse(json['birth']).toLocal() : null,
     );
   }
 
   // Phương thức để chuyển đổi User object thành Map (JSON) nếu cần gửi lên backend
   Map<String, dynamic> toJson() {
     return {
+      'employee_id': employeeId,
       'username': username,
       'full_name': fullName,
       'email': email,
       'phone': phone,
       'address': address,
-      'role': role,
       'avatarURL': avatarURL,
-      'birth': birth?.toIso8601String(),
+      'birth': birth != null ? DateFormat('yyyy-MM-dd').format(birth!) : null,
     };
   }
 }

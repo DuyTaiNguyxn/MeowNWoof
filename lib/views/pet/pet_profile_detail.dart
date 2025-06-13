@@ -75,11 +75,7 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
 
     if (hasUpdated == true) {
       await _loadPetData();
-      // Sau khi tải dữ liệu thành công, giả định rằng dữ liệu có thể đã thay đổi
-      // nếu đây là lần tải lại sau khi sửa, hoặc bạn có thể so sánh _currentPet
-      // với một bản sao trước đó để xác định chính xác hơn.
-      // Đối với mục đích này, chúng ta cứ đánh dấu là đã thay đổi nếu nó tải lại thành công.
-      _hasDataChanged = true; // Đặt thành true khi data được tải mới/cập nhật
+      _hasDataChanged = true;
     }
   }
 

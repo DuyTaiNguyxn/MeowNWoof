@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
 import 'package:meow_n_woof/models/user.dart';
 import 'package:intl/intl.dart';
+import 'package:meow_n_woof/services/image_upload_service.dart';
+import 'package:meow_n_woof/services/user_service.dart';
+import 'package:meow_n_woof/widgets/image_picker_widget.dart'; // Import UserService
 
 class EditUserProfilePage extends StatefulWidget {
   final User userData;
@@ -16,7 +19,7 @@ class EditUserProfilePage extends StatefulWidget {
 class _EditUserProfilePageState extends State<EditUserProfilePage> {
   final _formKey = GlobalKey<FormState>();
   File? _selectedImage;
-  final picker = ImagePicker();
+  String? _currentAvatarURL;
 
   late TextEditingController nameController;
   late TextEditingController emailController;
@@ -26,9 +29,13 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
 
   DateTime? _selectedBirthDate;
 
+  final UserService _userService = UserService();
+  final ImageUploadService _imageUploadService = ImageUploadService();
+
   @override
   void initState() {
     super.initState();
+    _currentAvatarURL = widget.userData.avatarURL;
     // Khởi tạo controllers với dữ liệu từ User object
     nameController = TextEditingController(text: widget.userData.fullName);
     emailController = TextEditingController(text: widget.userData.email);
@@ -44,55 +51,26 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   }
 
   Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Chụp ảnh'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.camera);
-                  if (pickedFile != null) {
-                    setState(() => _selectedImage = File(pickedFile.path));
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Chọn từ thư viện'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-                  if (pickedFile != null) {
-                    setState(() => _selectedImage = File(pickedFile.path));
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    final File? pickedImage = await ImagePickerWidget.showImageSourceSelectionSheet(context);
+    if (pickedImage != null) {
+      setState(() {
+        _selectedImage = pickedImage;
+        _currentAvatarURL = null;
+      });
+    }
   }
 
   Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: _selectedBirthDate ?? DateTime.now(),
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       locale: const Locale('vi', 'VN'),
     );
-    if (picked != null && picked != _selectedBirthDate) {
+    if (pickedDate != null && pickedDate != _selectedBirthDate) {
       setState(() {
-        _selectedBirthDate = picked;
+        _selectedBirthDate = pickedDate;
         birthController.text = DateFormat('dd/MM/yyyy').format(_selectedBirthDate!);
       });
     }
@@ -106,6 +84,75 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     birthController.dispose();
     addressController.dispose();
     super.dispose();
+  }
+
+  void _showSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  Future<void> _saveUser() async {
+    if (_formKey.currentState!.validate()) {
+      _showSnackBar('Đang lưu thông tin...');
+
+      String? finalImageUrl = _currentAvatarURL;
+      try {
+        if (_selectedImage != null) {
+          finalImageUrl = await _imageUploadService.uploadImage(
+            imageFile: _selectedImage!,
+            uploadPreset: 'pet_unsigned_upload',
+            folder: 'pet_images',
+          );
+          print('Đã tải ảnh mới lên Cloudinary thành công.');
+        }
+      } on SocketException {
+        _showSnackBar('Không có kết nối Internet khi tải ảnh. Vui lòng kiểm tra lại mạng của bạn.');
+        return;
+      } on http.ClientException catch (e) {
+        _showSnackBar('Lỗi kết nối server khi tải ảnh: ${e.message}');
+        print('Cloudinary upload error: $e');
+        return;
+      } catch (e) {
+        _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}');
+        print('Cloudinary upload error: $e');
+        return;
+      }
+
+      User updatedUserData = User(
+        employeeId: widget.userData.employeeId,
+        username: widget.userData.username,
+        fullName: nameController.text,
+        email: emailController.text,
+        phone: phoneController.text,
+        address: addressController.text,
+        birth: _selectedBirthDate,
+        avatarURL: finalImageUrl,
+      );
+      print('finalImageUrl: $finalImageUrl');
+      print('url in updatedUserData: ${updatedUserData.avatarURL}');
+
+      try {
+        final User responseUser = await _userService.updateUser(updatedUserData);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã lưu thông tin thành công')),
+        );
+        // TRUYỀN ĐỐI TƯỢNG USER ĐÃ CẬP NHẬT TRỞ LẠI
+        Navigator.pop(context, responseUser);
+      } on SocketException {
+        _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
+      } on http.ClientException {
+        _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
+      } catch (e) {
+        _showSnackBar('Lỗi khi cập nhật thông tin: ${e.toString()}');
+        print('Error updating user(profile): $e');
+      }
+    }
   }
 
   @override
@@ -155,7 +202,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                         suffixIcon: const Icon(Icons.calendar_today),
                       ),
-                      validator: (value) => (value == null || value.isEmpty) ? 'Vui lòng chọn ngày sinh' : null,
+                      validator: (value) =>
+                      (value == null || value.isEmpty) ? 'Vui lòng chọn ngày sinh' : null,
                     ),
                   ),
                 ),
@@ -169,32 +217,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                final updatedUser = User(
-                  employeeId: widget.userData.employeeId,
-                  username: widget.userData.username,
-                  fullName: nameController.text,
-                  email: emailController.text,
-                  phone: phoneController.text,
-                  address: addressController.text,
-                  birth: _selectedBirthDate,
-                  role: widget.userData.role,
-                  avatarURL: _selectedImage != null
-                      ? _selectedImage!.path
-                      : widget.userData.avatarURL,
-                );
-
-                // TODO: Gọi API để lưu updatedUser vào backend
-                // Ví dụ: AuthService().updateUser(updatedUser);
-                print('User đã cập nhật: ${updatedUser.toJson()}');
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Đã lưu thông tin thành công')),
-                );
-                Navigator.pop(context);
-              }
-            },
+            onPressed: _saveUser,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 6, 25, 81),
               padding: const EdgeInsets.symmetric(vertical: 16),
