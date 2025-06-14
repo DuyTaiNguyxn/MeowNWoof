@@ -87,7 +87,20 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const LoginScreen(),
+      home: Builder(
+        builder: (context) {
+          // Lắng nghe sự thay đổi của AuthService
+          final authService = Provider.of<AuthService>(context);
+
+          if (authService.currentUser != null) {
+            print('Người dùng đã đăng nhập: ${authService.currentUser?.fullName}');
+            return const HomeScreen();
+          } else {
+            print('Người dùng chưa đăng nhập');
+            return const LoginScreen();
+          }
+        },
+      ),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomeScreen(),

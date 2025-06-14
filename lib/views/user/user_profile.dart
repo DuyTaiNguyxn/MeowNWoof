@@ -22,7 +22,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> _navigateToEditUserProfile() async {
-    final authService = Provider.of<AuthService>(context, listen: false); // Không lắng nghe ở đây
+    final authService = Provider.of<AuthService>(context, listen: false);
     if (authService.currentUser == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Dữ liệu người dùng chưa sẵn sàng để chỉnh sửa.')),
@@ -151,7 +151,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _navigateToEditUserProfile, // Bỏ điều kiện loading
+                          onPressed: _navigateToEditUserProfile,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color.fromARGB(255, 6, 25, 81),
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -217,7 +217,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     );
   }
 
-  String _getLocalizedRole(String? roleName) { // Thay đổi tham số thành roleName
+  String _getLocalizedRole(String? roleName) {
     switch (roleName) {
       case 'staff':
         return 'Nhân viên y tế';

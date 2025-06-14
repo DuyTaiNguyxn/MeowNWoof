@@ -1,42 +1,41 @@
 // meow_n_woof/lib/services/auth_service.dart
 
 import 'dart:convert';
-import 'package:flutter/material.dart'; // Import để sử dụng ChangeNotifier
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
-import 'package:meow_n_woof/models/user.dart'; // Import model User
+import 'package:meow_n_woof/models/user.dart';
 
-// Thay đổi AuthService để kế thừa ChangeNotifier
 class AuthService extends ChangeNotifier {
   static const String _baseUrl = 'http://10.0.2.2:3000/api'; // IP máy ảo
 
-  User? _currentUser; // Biến private để lưu trữ User hiện tại của ứng dụng
+  User? _currentUser;
 
-  // Getter công khai để các widget có thể truy cập User hiện tại
   User? get currentUser => _currentUser;
 
-  // Constructor của AuthService: Tải user từ SharedPreferences khi AuthService được khởi tạo
   AuthService() {
     _loadUserFromPrefs();
   }
 
-  // Phương thức nội bộ để tải User từ SharedPreferences
   Future<void> _loadUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = prefs.getString('user_data');
     if (userJson != null) {
       try {
         _currentUser = User.fromJson(jsonDecode(userJson));
-        notifyListeners(); // Thông báo cho người nghe nếu user được tải thành công
+        print('AuthService: Đã tải user từ SharedPreferences: ${_currentUser?.username ?? 'N/A'}'); // DEBUG
+        notifyListeners();
+        print('AuthService: notifyListeners() called after loading user from prefs.'); // DEBUG
       } catch (e) {
-        print('Lỗi khi parse user từ SharedPreferences: $e');
-        _currentUser = null; // Đặt null nếu có lỗi parse
+        print('AuthService: Lỗi khi parse user từ SharedPreferences: $e');
+        _currentUser = null;
       }
+    } else {
+      print('AuthService: Không có user_data trong SharedPreferences.'); // DEBUG
     }
   }
 
-  // Phương thức nội bộ để lưu User vào SharedPreferences
   Future<void> _saveUserToPrefs(User user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_data', jsonEncode(user.toJson()));
@@ -62,9 +61,9 @@ class AuthService extends ChangeNotifier {
       if (response.statusCode == 200 && responseData.containsKey('token')) {
         await _saveToken(responseData['token']);
         if (responseData.containsKey('user')) {
-          _currentUser = User.fromJson(responseData['user']); // Cập nhật _currentUser
-          await _saveUserToPrefs(_currentUser!); // Lưu user vào SharedPreferences
-          notifyListeners(); // Thông báo cho tất cả người nghe
+          _currentUser = User.fromJson(responseData['user']);
+          await _saveUserToPrefs(_currentUser!);
+          notifyListeners();
         }
       }
       return responseData;
@@ -75,7 +74,6 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // Hàm lấy token đã lưu (giữ nguyên)
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('jwt_token');
@@ -88,17 +86,15 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('user_data');
     await prefs.remove('remember_me');
     await prefs.remove('saved_username');
-    _currentUser = null; // Xóa user hiện tại
-    notifyListeners(); // Thông báo cho tất cả người nghe rằng user đã bị xóa
+    _currentUser = null;
+    notifyListeners();
   }
 
-  // Hàm NỘI BỘ để lưu token vào SharedPreferences (giữ nguyên)
   Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('jwt_token', token);
   }
 
-  // Hàm xử lý phản hồi HTTP chung (giữ nguyên)
   Map<String, dynamic> _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       return jsonDecode(response.body);
@@ -108,10 +104,9 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // PHƯƠNG THỨC MỚI: Cập nhật thông tin User hiện tại và thông báo
   void updateCurrentUser(User updatedUser) async {
     _currentUser = updatedUser;
-    await _saveUserToPrefs(_currentUser!); // Lưu thông tin cập nhật vào prefs
-    notifyListeners(); // Thông báo cho tất cả các widget đang lắng nghe
+    await _saveUserToPrefs(_currentUser!);
+    notifyListeners();
   }
 }

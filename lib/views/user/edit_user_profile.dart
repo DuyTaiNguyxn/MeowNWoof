@@ -94,6 +94,52 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     }
   }
 
+  bool _hasUserDataChanged() {
+    // 1. Lấy dữ liệu hiện tại từ các controller và biến
+    String newFullName = nameController.text;
+    String newEmail = emailController.text;
+    String newPhone = phoneController.text;
+    String newAddress = addressController.text;
+    DateTime? newBirthDate = _selectedBirthDate;
+    String? newAvatarUrl = _currentAvatarURL; // Giữ URL hiện tại làm mặc định ban đầu
+
+    // 2. So sánh dữ liệu mới với dữ liệu ban đầu (widget.userData)
+    // Để so sánh DateTime, cần kiểm tra cả giá trị và định dạng nếu có.
+    bool birthDateChanged = false;
+    if (widget.userData.birth == null && newBirthDate != null) {
+      birthDateChanged = true;
+    } else if (widget.userData.birth != null && newBirthDate == null) {
+      birthDateChanged = true;
+    } else if (widget.userData.birth != null && newBirthDate != null) {
+      // So sánh theo ngày (nếu chỉ quan tâm đến ngày tháng năm)
+      birthDateChanged = widget.userData.birth!.year != newBirthDate.year ||
+          widget.userData.birth!.month != newBirthDate.month ||
+          widget.userData.birth!.day != newBirthDate.day;
+      // Hoặc so sánh chi tiết hơn nếu cả giờ/phút/giây cũng quan trọng
+      // birthDateChanged = widget.userData.birth != newBirthDate;
+    }
+
+    // Kiểm tra xem có ảnh mới được chọn không
+    bool selectedImageChanged = _selectedImage != null;
+
+    // Nếu không có _selectedImage, nhưng _currentAvatarURL (URL hiện tại) khác
+    // với widget.userData.avatarURL (URL gốc), điều đó cũng có nghĩa là avatar đã thay đổi
+    // (ví dụ: người dùng đã xóa ảnh đại diện hoặc thay đổi nó bằng cách khác)
+    bool avatarUrlChanged = newAvatarUrl != widget.userData.avatarURL;
+
+
+    // Kiểm tra tất cả các trường
+    bool hasChanges = newFullName != widget.userData.fullName ||
+        newEmail != widget.userData.email ||
+        newPhone != widget.userData.phone ||
+        newAddress != widget.userData.address ||
+        birthDateChanged ||
+        selectedImageChanged || // Nếu có ảnh mới được chọn, coi như có thay đổi
+        avatarUrlChanged;       // Nếu không có ảnh mới nhưng URL khác
+
+    return hasChanges;
+  }
+
   Future<void> _saveUser() async {
     if (_formKey.currentState!.validate()) {
       _showSnackBar('Đang lưu thông tin...');
@@ -103,8 +149,8 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         if (_selectedImage != null) {
           finalImageUrl = await _imageUploadService.uploadImage(
             imageFile: _selectedImage!,
-            uploadPreset: 'pet_unsigned_upload',
-            folder: 'pet_images',
+            uploadPreset: 'user_unsigned_upload',
+            folder: 'user_images',
           );
           print('Đã tải ảnh mới lên Cloudinary thành công.');
         }
@@ -217,7 +263,19 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: _saveUser,
+            onPressed: () async {
+              // Gọi hàm kiểm tra mới
+              if (!_hasUserDataChanged()) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Không có thông tin nào thay đổi.')),
+                );
+                return;
+              }
+
+              // Nếu có thay đổi, thì gọi hàm _saveUser để xử lý việc lưu
+              await _saveUser();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color.fromARGB(255, 6, 25, 81),
               padding: const EdgeInsets.symmetric(vertical: 16),

@@ -13,11 +13,10 @@ class PopupMenuWidget extends StatelessWidget {
     await _authService.logout();
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Đăng xuất thành công"),
-        duration: Duration(seconds: 2),
-        backgroundColor: Colors.grey,
-        behavior: SnackBarBehavior.floating,
+      SnackBar(
+        content: const Text("Đăng xuất thành công"),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Colors.grey[800],
       ),
     );
 

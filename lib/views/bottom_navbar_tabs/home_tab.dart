@@ -8,7 +8,6 @@ import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
-import 'package:meow_n_woof/models/user.dart';
 import 'package:provider/provider.dart';
 
 class HomeTab extends StatefulWidget {
@@ -91,7 +90,6 @@ class _HomeTabState extends State<HomeTab> {
     final keyword = _searchController.text.toLowerCase();
     setState(() {
       _filteredPets = _allPets.where((pet) {
-        // Truy cập thông tin owner từ Pet object. Cần kiểm tra null.
         final ownerName = pet.owner?.ownerName.toLowerCase() ?? '';
         final ownerPhone = pet.owner?.phone.toLowerCase() ?? '';
 
@@ -116,7 +114,6 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _navigateToCreatePetProfile() async {
-    // Chờ kết quả từ CreatePetProfilePage
     final bool? result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => CreatePetProfilePage()),
@@ -153,25 +150,35 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _navigateToCreatePrescriptions() async {
-    final selectedPet = await Navigator.push<Pet>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SelectPetPage(
-          selectedPet: null,
-          onPetSelected: (pet) {
-            Navigator.pop(context, pet);
-          },
+    final authService = Provider.of<AuthService>(context,listen: false);
+    if (authService.currentUser?.role == 'veterinarian') {
+      final selectedPet = await Navigator.push<Pet>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SelectPetPage(
+            selectedPet: null,
+            onPetSelected: (pet) {
+              Navigator.pop(context, pet);
+            },
+          ),
         ),
-      ),
-    );
+      );
 
-    if (selectedPet != null) {
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (_) => CreatePrescriptionsScreen(selectedPet: selectedPet),
-      //   ),
-      // );
+      if (selectedPet != null) {
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (_) => CreatePrescriptionsScreen(selectedPet: selectedPet),
+        //   ),
+        // );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chỉ bác sĩ mới có thể tạo đơn thuốc.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -201,6 +208,12 @@ class _HomeTabState extends State<HomeTab> {
         final userRole = _getLocalizedRole(currentUser?.role);
         final userAvatarUrl = currentUser?.avatarURL;
 
+        print('Thông tin người dùng hiện tại:');
+        print('ID: ${currentUser?.employeeId}');
+        print('Tên đầy đủ: ${currentUser?.fullName}');
+        print('Email: ${currentUser?.email}');
+        print('Vai trò: ${currentUser?.role}');
+        print('URL Avatar: ${currentUser?.avatarURL}');
         return InkWell(
           onTap: () async {
             await Navigator.push(
@@ -369,7 +382,6 @@ class _HomeTabState extends State<HomeTab> {
           ),
 
           const SizedBox(height: 12),
-          // Hiển thị trạng thái tải hoặc lỗi
           _isLoadingPets
               ? const Center(child: CircularProgressIndicator())
               : _errorMessage != null
@@ -386,7 +398,7 @@ class _HomeTabState extends State<HomeTab> {
                   ),
                   const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed: _loadPets, // Thử tải lại
+                    onPressed: _loadPets,
                     child: const Text('Thử lại'),
                   ),
                 ],
@@ -413,14 +425,13 @@ class _HomeTabState extends State<HomeTab> {
                     )
                         : const Icon(Icons.pets, size: 48),
                     title: Text(
-                      pet.petName, // Đã đổi từ pet.name
+                      pet.petName,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                     subtitle: Text(
-                      // Truy cập thông tin chủ nuôi từ PetOwner object bên trong Pet
                       '${pet.owner?.ownerName ?? 'N/A'} - ${pet.owner?.phone ?? 'N/A'}',
                       style: TextStyle(color: Colors.grey[700]),
                     ),

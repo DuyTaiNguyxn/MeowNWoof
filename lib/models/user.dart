@@ -46,6 +46,7 @@ class User {
       'email': email,
       'phone': phone,
       'address': address,
+      'role': role,
       'avatarURL': avatarURL,
       'birth': birth != null ? DateFormat('yyyy-MM-dd').format(birth!) : null,
     };
