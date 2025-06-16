@@ -213,6 +213,7 @@ class _HomeTabState extends State<HomeTab> {
         print('ID: ${currentUser?.employeeId}');
         print('Tên đầy đủ: ${currentUser?.fullName}');
         print('Email: ${currentUser?.email}');
+        print('Ngay sinh: ${currentUser?.birth}');
         print('Vai trò: ${currentUser?.role}');
         print('URL Avatar: ${currentUser?.avatarURL}');
         return InkWell(

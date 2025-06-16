@@ -26,8 +26,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   late TextEditingController phoneController;
   late TextEditingController birthController;
   late TextEditingController addressController;
-
-  DateTime? _selectedBirthDate;
+  late DateTime _selectedBirthDate;
 
   final UserService _userService = UserService();
   final ImageUploadService _imageUploadService = ImageUploadService();
@@ -36,17 +35,17 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   void initState() {
     super.initState();
     _currentAvatarURL = widget.userData.avatarURL;
-    // Khởi tạo controllers với dữ liệu từ User object
     nameController = TextEditingController(text: widget.userData.fullName);
     emailController = TextEditingController(text: widget.userData.email);
     phoneController = TextEditingController(text: widget.userData.phone);
     addressController = TextEditingController(text: widget.userData.address);
-
-    _selectedBirthDate = widget.userData.birth;
+    _selectedBirthDate = DateTime(
+      widget.userData.birth.year,
+      widget.userData.birth.month,
+      widget.userData.birth.day,
+    );
     birthController = TextEditingController(
-      text: _selectedBirthDate != null
-          ? DateFormat('dd/MM/yyyy').format(_selectedBirthDate!)
-          : '',
+      text: DateFormat('dd/MM/yyyy').format(_selectedBirthDate),
     );
   }
 
@@ -63,15 +62,15 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
-      initialDate: _selectedBirthDate ?? DateTime.now(),
+      initialDate: _selectedBirthDate,
       firstDate: DateTime(1950),
       lastDate: DateTime.now(),
       locale: const Locale('vi', 'VN'),
     );
     if (pickedDate != null && pickedDate != _selectedBirthDate) {
       setState(() {
-        _selectedBirthDate = pickedDate;
-        birthController.text = DateFormat('dd/MM/yyyy').format(_selectedBirthDate!);
+        _selectedBirthDate = DateTime(pickedDate.year, pickedDate.month, pickedDate.day);
+        birthController.text = DateFormat('dd/MM/yyyy').format(_selectedBirthDate);
       });
     }
   }
@@ -95,50 +94,37 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   }
 
   bool _hasUserDataChanged() {
-    // 1. Lấy dữ liệu hiện tại từ các controller và biến
     String newFullName = nameController.text;
     String newEmail = emailController.text;
     String newPhone = phoneController.text;
     String newAddress = addressController.text;
-    DateTime? newBirthDate = _selectedBirthDate;
-    String? newAvatarUrl = _currentAvatarURL; // Giữ URL hiện tại làm mặc định ban đầu
+    DateTime newBirthDate = _selectedBirthDate;
+    String? newAvatarUrlFromState = _currentAvatarURL;
 
-    // 2. So sánh dữ liệu mới với dữ liệu ban đầu (widget.userData)
-    // Để so sánh DateTime, cần kiểm tra cả giá trị và định dạng nếu có.
     bool birthDateChanged = false;
-    if (widget.userData.birth == null && newBirthDate != null) {
-      birthDateChanged = true;
-    } else if (widget.userData.birth != null && newBirthDate == null) {
-      birthDateChanged = true;
-    } else if (widget.userData.birth != null && newBirthDate != null) {
-      // So sánh theo ngày (nếu chỉ quan tâm đến ngày tháng năm)
-      birthDateChanged = widget.userData.birth!.year != newBirthDate.year ||
-          widget.userData.birth!.month != newBirthDate.month ||
-          widget.userData.birth!.day != newBirthDate.day;
-      // Hoặc so sánh chi tiết hơn nếu cả giờ/phút/giây cũng quan trọng
-      // birthDateChanged = widget.userData.birth != newBirthDate;
-    }
+    final DateTime oldBirthDateLocal = DateTime(
+        widget.userData.birth.year, // widget.userData.birth không null
+        widget.userData.birth.month,
+        widget.userData.birth.day);
+    final DateTime newBirthDateLocal = DateTime(
+        newBirthDate.year, newBirthDate.month, newBirthDate.day);
 
-    // Kiểm tra xem có ảnh mới được chọn không
+    birthDateChanged = oldBirthDateLocal != newBirthDateLocal;
+
     bool selectedImageChanged = _selectedImage != null;
+    bool avatarUrlChanged = newAvatarUrlFromState != widget.userData.avatarURL;
 
-    // Nếu không có _selectedImage, nhưng _currentAvatarURL (URL hiện tại) khác
-    // với widget.userData.avatarURL (URL gốc), điều đó cũng có nghĩa là avatar đã thay đổi
-    // (ví dụ: người dùng đã xóa ảnh đại diện hoặc thay đổi nó bằng cách khác)
-    bool avatarUrlChanged = newAvatarUrl != widget.userData.avatarURL;
-
-
-    // Kiểm tra tất cả các trường
     bool hasChanges = newFullName != widget.userData.fullName ||
         newEmail != widget.userData.email ||
         newPhone != widget.userData.phone ||
         newAddress != widget.userData.address ||
         birthDateChanged ||
-        selectedImageChanged || // Nếu có ảnh mới được chọn, coi như có thay đổi
-        avatarUrlChanged;       // Nếu không có ảnh mới nhưng URL khác
+        selectedImageChanged ||
+        avatarUrlChanged;
 
     return hasChanges;
   }
+
 
   Future<void> _saveUser() async {
     if (_formKey.currentState!.validate()) {
@@ -189,7 +175,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Đã lưu thông tin thành công')),
         );
-        // TRUYỀN ĐỐI TƯỢNG USER ĐÃ CẬP NHẬT TRỞ LẠI
         Navigator.pop(context, responseUser);
       } on SocketException {
         _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
@@ -204,11 +189,14 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final avatarProvider = _selectedImage != null
-        ? FileImage(_selectedImage!)
-        : (widget.userData.avatarURL != null && widget.userData.avatarURL!.isNotEmpty)
-        ? NetworkImage(widget.userData.avatarURL!)
-        : const AssetImage('assets/images/avatar.png') as ImageProvider;
+    final ImageProvider avatarProvider;
+    if (_selectedImage != null) {
+      avatarProvider = FileImage(_selectedImage!);
+    } else if (_currentAvatarURL != null && _currentAvatarURL!.isNotEmpty) {
+      avatarProvider = NetworkImage(_currentAvatarURL!);
+    } else {
+      avatarProvider = const AssetImage('assets/images/avatar.png');
+    }
 
     return Scaffold(
       appBar: AppBar(

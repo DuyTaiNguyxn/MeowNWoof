@@ -61,23 +61,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Lắng nghe sự thay đổi của AuthService để cập nhật UI
     return Consumer<AuthService>(
       builder: (context, authService, child) {
-        final currentUser = authService.currentUser; // Lấy user từ AuthService
+        final currentUser = authService.currentUser;
 
         if (currentUser == null) {
           return const Center(child: CircularProgressIndicator());
         }
 
         String formattedBirthDate = 'Chưa cập nhật';
-        if (currentUser.birth != null) {
-          try {
-            formattedBirthDate = DateFormat('dd/MM/yyyy').format(currentUser.birth!);
-          } catch (e) {
-            print('Lỗi định dạng ngày sinh trong UserProfilePage: ${currentUser.birth} - $e');
-            formattedBirthDate = 'Ngày không hợp lệ';
-          }
+        try {
+          formattedBirthDate = DateFormat('dd/MM/yyyy').format(currentUser.birth.toLocal());
+        } catch (e) {
+          print('Lỗi định dạng ngày sinh trong UserProfilePage: ${currentUser.birth} - $e');
+          formattedBirthDate = 'Ngày không hợp lệ';
         }
 
         final String localizedRole = _getLocalizedRole(currentUser.role);
@@ -105,7 +102,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       _buildUserImage(currentUser),
                       const SizedBox(height: 12),
                       Text(
-                        currentUser.fullName ?? 'Chưa cập nhật',
+                        currentUser.fullName,
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,

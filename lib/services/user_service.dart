@@ -32,9 +32,9 @@ class UserService {
       print('DEBUG: Data being sent for update: $userDataJson');
 
       final response = await http.put(
-        Uri.parse('$_baseUrl/users/${user.employeeId}'), // Giả sử API có endpoint /users/{id} cho PUT
+        Uri.parse('$_baseUrl/users/${user.employeeId}'),
         headers: headers,
-        body: userDataJson, // Chuyển User object thành JSON string
+        body: userDataJson,
       );
 
       if (response.statusCode == 200) {

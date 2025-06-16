@@ -23,22 +23,25 @@ class AuthService extends ChangeNotifier {
     final userJson = prefs.getString('user_data');
     if (userJson != null) {
       try {
+        // User.fromJson sẽ parse chuỗi birth và chuẩn hóa nó thành DateTime local
         _currentUser = User.fromJson(jsonDecode(userJson));
-        print('AuthService: Đã tải user từ SharedPreferences: ${_currentUser?.username ?? 'N/A'}'); // DEBUG
+        print('AuthService: Đã tải user từ SharedPreferences: ${_currentUser?.username ?? 'N/A'}');
+        print('AuthService: Ngày sinh từ SharedPreferences: ${_currentUser?.birth}'); // Kiểm tra ở đây
         notifyListeners();
-        print('AuthService: notifyListeners() called after loading user from prefs.'); // DEBUG
+        print('AuthService: notifyListeners() called after loading user from prefs.');
       } catch (e) {
         print('AuthService: Lỗi khi parse user từ SharedPreferences: $e');
         _currentUser = null;
       }
     } else {
-      print('AuthService: Không có user_data trong SharedPreferences.'); // DEBUG
+      print('AuthService: Không có user_data trong SharedPreferences.');
     }
   }
 
   Future<void> _saveUserToPrefs(User user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_data', jsonEncode(user.toJson()));
+    print('AuthService: Đã lưu user vào SharedPreferences. Birth: ${user.birth.toIso8601String()}'); // Kiểm tra ở đây
   }
 
   // Phương thức nội bộ để xóa User khỏi SharedPreferences

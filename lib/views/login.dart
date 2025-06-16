@@ -66,15 +66,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
+      Navigator.pushReplacementNamed(context, '/home');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(response['message'] ?? 'Đăng nhập thành công!'),
           backgroundColor: Colors.lightGreen,
         ),
       );
-
-      Navigator.pushReplacementNamed(context, '/home');
-
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
