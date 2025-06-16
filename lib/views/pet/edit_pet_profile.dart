@@ -208,8 +208,12 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         await _petService.updatePet(updatedPetData);
 
         if (mounted) {
-          _showSnackBar('Đã cập nhật hồ sơ thú cưng thành công!');
-          // TRUYỀN TRUE để báo cho trang trước biết là đã có cập nhật
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Cập nhật thông tin pet thành công!'),
+              backgroundColor: Colors.lightGreen,
+            ),
+          );
           Navigator.pop(context, true);
         }
       } on SocketException {

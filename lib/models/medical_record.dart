@@ -6,7 +6,7 @@ class PetMedicalRecord {
   final DateTime recordDate;
   final String? symptoms;
   final String? preliminaryDiagnosis;
-  final String finalDiagnosis;
+  final String? finalDiagnosis;
   final String? treatmentMethod;
   final int veterinarianId;
   final String? veterinarianNote;
@@ -18,7 +18,7 @@ class PetMedicalRecord {
     required this.recordDate,
     this.symptoms,
     this.preliminaryDiagnosis,
-    required this.finalDiagnosis,
+    this.finalDiagnosis,
     this.treatmentMethod,
     required this.veterinarianId,
     this.veterinarianNote,
@@ -32,7 +32,7 @@ class PetMedicalRecord {
       recordDate: DateTime.parse(json['record_date'].toString()),
       symptoms: json['symptoms']?.toString(),
       preliminaryDiagnosis: json['preliminary_diagnosis']?.toString(),
-      finalDiagnosis: json['final_diagnosis'].toString(),
+      finalDiagnosis: json['final_diagnosis']?.toString(),
       treatmentMethod: json['treatment_method']?.toString(),
       veterinarianId: json['veterinarian_id'] as int,
       veterinarianNote: json['veterinarian_note']?.toString(),

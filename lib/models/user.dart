@@ -22,7 +22,9 @@ class User {
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    final DateTime rawBirth = DateTime.parse(json['birth']);
+    final DateTime rawBirth = json['birth'] != null
+        ? DateTime.parse(json['birth'].toString())
+        : DateTime.now();
     final DateTime localRawBirth = rawBirth.toLocal();
     DateTime parsedBirth = DateTime(localRawBirth.year, localRawBirth.month, localRawBirth.day);
     return User(

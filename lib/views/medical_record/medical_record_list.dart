@@ -62,12 +62,11 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   void _filterRecords(String keyword) {
     final lowerKeyword = keyword.toLowerCase();
 
-    // THÊM ĐOẠN NÀY ĐỂ XỬ LÝ TRƯỜNG HỢP KHÔNG CÓ TỪ KHÓA TÌM KIẾM
     if (keyword.isEmpty) {
       setState(() {
-        _filteredRecords = List.from(_allRecords); // Hiển thị tất cả bản ghi gốc
+        _filteredRecords = List.from(_allRecords);
       });
-      return; // Thoát hàm vì không cần lọc
+      return;
     }
 
     final result = _allRecords.where((record) {
@@ -75,11 +74,11 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
         case 'Ngày':
           return record.recordDate.toIso8601String().toLowerCase().contains(lowerKeyword);
         case 'Bác sĩ':
-          return record.veterinarian?.fullName?.toLowerCase().contains(lowerKeyword) ?? false;
+          return record.veterinarian?.fullName.toLowerCase().contains(lowerKeyword) ?? false;
         case 'Triệu chứng':
           return record.symptoms?.toLowerCase().contains(lowerKeyword) ?? false;
         case 'Chẩn đoán':
-          return (record.finalDiagnosis.toLowerCase().contains(lowerKeyword)) ||
+          return (record.finalDiagnosis?.toLowerCase().contains(lowerKeyword)) ?? false ||
               (record.preliminaryDiagnosis?.toLowerCase().contains(lowerKeyword) ?? false);
         default:
           return false;

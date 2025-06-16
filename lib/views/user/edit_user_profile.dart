@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:meow_n_woof/models/user.dart';
 import 'package:intl/intl.dart';
+import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/image_upload_service.dart';
 import 'package:meow_n_woof/services/user_service.dart';
-import 'package:meow_n_woof/widgets/image_picker_widget.dart'; // Import UserService
+import 'package:meow_n_woof/widgets/image_picker_widget.dart';
+import 'package:provider/provider.dart';
 
 class EditUserProfilePage extends StatefulWidget {
   final User userData;
@@ -28,12 +30,16 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
   late TextEditingController addressController;
   late DateTime _selectedBirthDate;
 
-  final UserService _userService = UserService();
+  late UserService _userService;
   final ImageUploadService _imageUploadService = ImageUploadService();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authService = Provider.of<AuthService>(context, listen: false);
+      _userService = UserService(authService); // Truyền authService vào constructor
+    });
     _currentAvatarURL = widget.userData.avatarURL;
     nameController = TextEditingController(text: widget.userData.fullName);
     emailController = TextEditingController(text: widget.userData.email);

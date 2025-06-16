@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final password = passwordController.text.trim();
 
     try {
-      final response = await authService.login(username, password);
+      final response = await authService.login(username, password, _rememberMe);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('remember_me', _rememberMe);

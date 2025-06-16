@@ -152,7 +152,7 @@ class MedicalRecordDetailPage extends StatelessWidget {
             ),
             _buildDetailRow(
               'Chẩn đoán cuối cùng:',
-              record.finalDiagnosis,
+              record.finalDiagnosis?.isNotEmpty == true ? record.finalDiagnosis! : 'Chưa có',
             ),
             _buildDetailRow(
               'Phương pháp điều trị:',

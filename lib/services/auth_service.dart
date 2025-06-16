@@ -23,10 +23,9 @@ class AuthService extends ChangeNotifier {
     final userJson = prefs.getString('user_data');
     if (userJson != null) {
       try {
-        // User.fromJson sẽ parse chuỗi birth và chuẩn hóa nó thành DateTime local
         _currentUser = User.fromJson(jsonDecode(userJson));
         print('AuthService: Đã tải user từ SharedPreferences: ${_currentUser?.username ?? 'N/A'}');
-        print('AuthService: Ngày sinh từ SharedPreferences: ${_currentUser?.birth}'); // Kiểm tra ở đây
+        print('AuthService: Ngày sinh từ SharedPreferences: ${_currentUser?.birth}');
         notifyListeners();
         print('AuthService: notifyListeners() called after loading user from prefs.');
       } catch (e) {
@@ -41,17 +40,15 @@ class AuthService extends ChangeNotifier {
   Future<void> _saveUserToPrefs(User user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_data', jsonEncode(user.toJson()));
-    print('AuthService: Đã lưu user vào SharedPreferences. Birth: ${user.birth.toIso8601String()}'); // Kiểm tra ở đây
+    print('AuthService: Đã lưu user vào SharedPreferences. Birth: ${user.birth.toIso8601String() ?? 'N/A'}');
   }
 
-  // Phương thức nội bộ để xóa User khỏi SharedPreferences
   Future<void> _removeUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('user_data');
   }
 
-  // Hàm đăng nhập (login)
-  Future<Map<String, dynamic>> login(String username, String password) async {
+  Future<Map<String, dynamic>> login(String username, String password, bool rememberMe) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/login'),
@@ -62,10 +59,16 @@ class AuthService extends ChangeNotifier {
       final responseData = _handleResponse(response);
 
       if (response.statusCode == 200 && responseData.containsKey('token')) {
-        await _saveToken(responseData['token']);
+        await _saveToken(responseData['token']); // Luôn lưu token
+
         if (responseData.containsKey('user')) {
           _currentUser = User.fromJson(responseData['user']);
-          await _saveUserToPrefs(_currentUser!);
+
+          if (rememberMe) { // Chỉ lưu dữ liệu user nếu `rememberMe` là true
+            await _saveUserToPrefs(_currentUser!);
+          } else {
+            await _removeUserFromPrefs(); // Xóa dữ liệu user nếu không ghi nhớ
+          }
           notifyListeners();
         }
       }
@@ -82,7 +85,6 @@ class AuthService extends ChangeNotifier {
     return prefs.getString('jwt_token');
   }
 
-  // Hàm xóa token và user (đăng xuất)
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('jwt_token');
@@ -109,6 +111,8 @@ class AuthService extends ChangeNotifier {
 
   void updateCurrentUser(User updatedUser) async {
     _currentUser = updatedUser;
+    // Cần kiểm tra lại `remember_me` để quyết định có lưu vào prefs không
+    // Hoặc nếu bạn muốn luôn cập nhật user data đã lưu khi có thay đổi từ server:
     await _saveUserToPrefs(_currentUser!);
     notifyListeners();
   }

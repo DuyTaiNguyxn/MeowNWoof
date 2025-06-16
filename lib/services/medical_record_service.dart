@@ -151,9 +151,15 @@ class MedicalRecordService {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
-        final List<dynamic> data = responseBody['data'];
-        print('[RecordService] responseBody["data"] received: ${data.length} items for petId: $petId');
-        return data.map((json) => PetMedicalRecord.fromJson(json)).toList();
+        final List<dynamic> rawData = responseBody['data'];
+        print('[RecordService] responseBody["data"] received: ${rawData.length} items for petId: $petId');
+        final List<PetMedicalRecord> medicalRecords = rawData.map((json) {
+          final record = PetMedicalRecord.fromJson(json);
+          print('[RecordService] Parsed Medical Record (fromJson): ${record.toJson()}'); // Log từng đối tượng đã parse
+          return record;
+        }).toList();
+
+        return medicalRecords;
       } else if (response.statusCode == 404) {
         print('[RecordService] Received 404 for petId: $petId, returning empty list.'); 
         return [];
