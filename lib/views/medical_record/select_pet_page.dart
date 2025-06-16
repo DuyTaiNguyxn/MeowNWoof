@@ -180,19 +180,16 @@ class _SelectPetPageState extends State<SelectPetPage> {
                 itemCount: _filteredPets.length,
                 itemBuilder: (context, index) {
                   final pet = _filteredPets[index];
-                  // Sử dụng petId để so sánh, vì widget.selectedPet có thể không phải là cùng một instance object
-                  final isSelected = widget.selectedPet?.petId == pet.petId;
 
                   return Card(
                     elevation: 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    color: isSelected ? Colors.lightBlueAccent : null,
                     child: ListTile(
-                      leading: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+                      leading: pet.imageURL != null && pet.imageURL!.isNotEmpty
                           ? CircleAvatar(
-                        backgroundImage: NetworkImage(pet.imageUrl!),
+                        backgroundImage: NetworkImage(pet.imageURL!),
                         radius: 24,
                       )
                           : const Icon(Icons.pets, size: 32),
@@ -204,7 +201,6 @@ class _SelectPetPageState extends State<SelectPetPage> {
                         ),
                       ),
                       subtitle: Text(
-                        // Truy cập thông tin chủ nuôi từ PetOwner object bên trong Pet
                         '${pet.owner?.ownerName ?? 'N/A'} - ${pet.owner?.phone ?? 'N/A'}',
                         style: TextStyle(color: Colors.grey[700]),
                       ),

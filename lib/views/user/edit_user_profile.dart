@@ -147,6 +147,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
       String? finalImageUrl = _currentAvatarURL;
       try {
         if (_selectedImage != null) {
+          _showSnackBar('Đang tải ảnh lên...');
           finalImageUrl = await _imageUploadService.uploadImage(
             imageFile: _selectedImage!,
             uploadPreset: 'user_unsigned_upload',
@@ -225,11 +226,15 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                 child: CircleAvatar(
                   radius: 60,
                   backgroundImage: avatarProvider,
-                  child: _selectedImage == null &&
-                      (widget.userData.avatarURL == null ||
-                          widget.userData.avatarURL!.isEmpty)
-                      ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white70)
-                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.add_a_photo, size: 30, color: Colors.white70),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

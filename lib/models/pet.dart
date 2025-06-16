@@ -12,7 +12,7 @@ class Pet {
   final int? age;
   final String? gender;
   final double? weight;
-  final String? imageUrl;
+  final String? imageURL;
   final int? ownerId;
   final PetOwner? owner;
   final Species? species;
@@ -28,7 +28,7 @@ class Pet {
     this.age,
     this.gender,
     this.weight,
-    this.imageUrl,
+    this.imageURL,
     this.ownerId,
     this.owner,
     this.species,
@@ -46,7 +46,7 @@ class Pet {
       age: json['age'] != null ? int.tryParse(json['age'].toString()) : null,
       gender: json['gender'] as String?,
       weight: json['weight'] != null ? double.tryParse(json['weight'].toString()) : null,
-      imageUrl: json['imageURL'] as String?,
+      imageURL: json['imageURL']?.toString(),
       ownerId: json['owner_id'] != null ? int.tryParse(json['owner_id'].toString()) : null,
       owner: json['owner'] != null ? PetOwner.fromJson(json['owner'] as Map<String, dynamic>) : null,
       species: json['species'] != null ? Species.fromJson(json['species'] as Map<String, dynamic>) : null,
@@ -64,7 +64,7 @@ class Pet {
       'age': age,
       'gender': gender,
       'weight': weight,
-      'imageURL': imageUrl,
+      'imageURL': imageURL,
       'owner': owner?.toJson(),
     };
   }

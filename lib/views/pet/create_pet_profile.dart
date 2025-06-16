@@ -181,7 +181,7 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         age: int.tryParse(ageController.text),
         gender: gender,
         weight: double.tryParse(weightController.text),
-        imageUrl: imageUrlToSave,
+        imageURL: imageUrlToSave,
         owner: newOwner,
       );
 

@@ -193,9 +193,9 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
                     ),
                     color: isSelected ? Colors.lightBlueAccent : null,
                     child: ListTile(
-                      leading: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+                      leading: pet.imageURL != null && pet.imageURL!.isNotEmpty
                           ? CircleAvatar(
-                        backgroundImage: NetworkImage(pet.imageUrl!),
+                        backgroundImage: NetworkImage(pet.imageURL!),
                         radius: 24,
                       )
                           : const Icon(Icons.pets, size: 32),

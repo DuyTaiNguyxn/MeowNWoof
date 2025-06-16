@@ -170,7 +170,9 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => MedicalRecordListPage(pet: _currentPet!), // Truyền _currentPet!
+                            builder: (_) => MedicalRecordListPage(
+                              selectedPet: _currentPet!,
+                            ), // Truyền _currentPet!
                           ),
                         );
                       },
@@ -234,8 +236,8 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
   Widget _buildPetImage(Pet petToDisplay) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
-      child: petToDisplay.imageUrl != null && petToDisplay.imageUrl!.isNotEmpty
-          ? Image.network(petToDisplay.imageUrl!, height: 300, width: double.infinity, fit: BoxFit.cover)
+      child: petToDisplay.imageURL != null && petToDisplay.imageURL!.isNotEmpty
+          ? Image.network(petToDisplay.imageURL!, height: 300, width: double.infinity, fit: BoxFit.cover)
           : Image.asset('assets/images/logo_bg.png', height: 300, width: double.infinity, fit: BoxFit.cover),
     );
   }

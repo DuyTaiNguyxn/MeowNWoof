@@ -45,7 +45,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
     super.initState();
     final pet = widget.pet;
 
-    _currentImageUrl = pet.imageUrl;
+    _currentImageUrl = pet.imageURL;
 
     petNameController = TextEditingController(text: pet.petName);
     ageController = TextEditingController(text: pet.age?.toString() ?? '');
@@ -199,7 +199,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         age: int.tryParse(ageController.text),
         gender: gender,
         weight: double.tryParse(weightController.text),
-        imageUrl: finalImageUrl,
+        imageURL: finalImageUrl,
       );
 
       try {
@@ -258,9 +258,15 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
                 child: CircleAvatar(
                   radius: 60,
                   backgroundImage: petImageProvider,
-                  child: (_selectedImage == null && (_currentImageUrl == null || _currentImageUrl!.isEmpty))
-                      ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white70)
-                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.add_a_photo, size: 30, color: Colors.white70),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),

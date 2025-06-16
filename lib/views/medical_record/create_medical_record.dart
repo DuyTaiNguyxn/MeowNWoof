@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/models/pet.dart';
 
 class CreateMedicalRecordScreen extends StatelessWidget {
-  final Pet selectedPet;
+  final int? petId;
+  final String? petName;
 
-  const CreateMedicalRecordScreen({super.key, required this.selectedPet});
+  const CreateMedicalRecordScreen({
+    super.key,
+    this.petId,
+    this.petName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -14,7 +18,7 @@ class CreateMedicalRecordScreen extends StatelessWidget {
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: Center(
-        child: Text('Đang tạo hồ sơ cho: ${selectedPet.petName}'),
+        child: Text('Đang tạo hồ sơ cho: ${petName!}'),
       ),
     );
   }

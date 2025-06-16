@@ -16,11 +16,11 @@ class PetOwner {
 
   factory PetOwner.fromJson(Map<String, dynamic> json) {
     return PetOwner(
-      ownerId: json['owner_id'] != null ? int.tryParse(json['owner_id'].toString()) : null, // Xử lý an toàn
-      ownerName: json['owner_name'] as String,
-      phone: json['phone'] as String,
-      email: json['email'] as String?,
-      address: json['address'] as String?,
+      ownerId: json['owner_id'] != null ? int.tryParse(json['owner_id'].toString()) : null,
+      ownerName: json['owner_name'].toString(),
+      phone: json['phone'].toString(),
+      email: json['email']?.toString(),
+      address: json['address']?.toString(),
     );
   }
 

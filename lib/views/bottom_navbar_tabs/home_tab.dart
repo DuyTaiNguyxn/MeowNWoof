@@ -124,7 +124,7 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _navigateToCreateMedicalRecord() async {
-    final selectedPet = await Navigator.push<Pet>(
+    final Pet? selectedPet = await Navigator.push<Pet?>(
       context,
       MaterialPageRoute(
         builder: (_) => SelectPetPage(
@@ -136,14 +136,15 @@ class _HomeTabState extends State<HomeTab> {
       ),
     );
 
-    // Cần kiểm tra 'mounted' trước khi sử dụng context
     if (!mounted) return;
 
     if (selectedPet != null) {
-      Navigator.push(
+      await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => MedicalRecordListPage(pet: selectedPet),
+          builder: (_) => MedicalRecordListPage(
+            selectedPet: selectedPet,
+          ),
         ),
       );
     }
@@ -418,9 +419,9 @@ class _HomeTabState extends State<HomeTab> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: ListTile(
-                    leading: pet.imageUrl != null && pet.imageUrl!.isNotEmpty
+                    leading: pet.imageURL != null && pet.imageURL!.isNotEmpty
                         ? CircleAvatar(
-                      backgroundImage: NetworkImage(pet.imageUrl!),
+                      backgroundImage: NetworkImage(pet.imageURL!),
                       radius: 24,
                     )
                         : const Icon(Icons.pets, size: 48),
