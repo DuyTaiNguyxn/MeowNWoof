@@ -37,11 +37,6 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
   bool _isLoadingDropdowns = true;
   String? _dropdownErrorMessage;
 
-  // **XÓA CÁC DÒNG KHỞI TẠO CỤC BỘ NÀY:**
-  // final PetService _petService = PetService();
-  // final SpeciesBreedService _speciesBreedService = SpeciesBreedService();
-  // final ImageUploadService _imageUploadService = ImageUploadService();
-
   @override
   void initState() {
     super.initState();
@@ -57,7 +52,6 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
     _selectedSpeciesId = pet.species?.speciesId;
     _selectedBreedId = pet.breed?.breedId;
 
-    // **ĐẢM BẢO GỌI _loadDropdownData SAU KHI CONTEXT SẴN SÀNG**
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadDropdownData();
     });
@@ -70,16 +64,14 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
     });
 
     try {
-      // **TRUY CẬP SpeciesBreedService QUA PROVIDER**
       final speciesBreedService = context.read<SpeciesBreedService>();
 
       _availableSpecies = await speciesBreedService.getSpecies();
 
       if (_selectedSpeciesId != null) {
         _availableBreeds = await speciesBreedService.getBreedsBySpeciesId(_selectedSpeciesId!);
-        // Kiểm tra lại _selectedBreedId có hợp lệ với loài mới không
         if (!_availableBreeds.any((b) => b.breedId == _selectedBreedId)) {
-          _selectedBreedId = null; // Đặt về null nếu giống không thuộc loài mới
+          _selectedBreedId = null;
         }
       } else {
         _availableBreeds = [];
@@ -120,14 +112,13 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
   void _onSpeciesChanged(int? newSpeciesId) {
     setState(() {
       _selectedSpeciesId = newSpeciesId;
-      _selectedBreedId = null; // Reset giống khi loài thay đổi
+      _selectedBreedId = null;
       _availableBreeds.clear();
       _dropdownErrorMessage = null;
 
       if (newSpeciesId != null) {
         _isLoadingDropdowns = true;
         print('Đang tải giống cho Species ID: $newSpeciesId');
-        // **TRUY CẬP SpeciesBreedService QUA PROVIDER TRONG HÀM NÀY**
         final speciesBreedService = context.read<SpeciesBreedService>();
         speciesBreedService.getBreedsBySpeciesId(newSpeciesId).then((breeds) {
           if (mounted) {
@@ -162,7 +153,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
     if (pickedImage != null) {
       setState(() {
         _selectedImage = pickedImage;
-        _currentImageUrl = null; // Xóa URL ảnh hiện tại khi chọn ảnh mới
+        _currentImageUrl = null;
       });
     }
   }
@@ -182,7 +173,6 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
       String? finalImageUrl = _currentImageUrl;
       try {
         if (_selectedImage != null) {
-          // **TRUY CẬP ImageUploadService QUA PROVIDER**
           final imageUploadService = context.read<ImageUploadService>();
           finalImageUrl = await imageUploadService.uploadImage(
             imageFile: _selectedImage!,
@@ -203,9 +193,10 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         print('Cloudinary upload error: $e');
         return;
       }
+      if (!mounted) return;
 
       final updatedPetData = Pet(
-        petId: widget.pet.petId, // Giữ nguyên petId của pet đang chỉnh sửa
+        petId: widget.pet.petId,
         petName: petNameController.text,
         speciesId: _selectedSpeciesId,
         breedId: _selectedBreedId,
@@ -213,15 +204,10 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         gender: gender,
         weight: double.tryParse(weightController.text),
         imageURL: finalImageUrl,
-        // Các trường khác như owner, createdAt, updatedAt không cần thiết khi update
-        // hoặc bạn có thể muốn lấy chúng từ widget.pet nếu API yêu cầu
-        owner: widget.pet.owner, // Giữ lại thông tin owner nếu không chỉnh sửa
-        createdAt: widget.pet.createdAt,
-        updatedAt: DateTime.now(), // Cập nhật thời gian chỉnh sửa
+        owner: widget.pet.owner,
       );
 
       try {
-        // **TRUY CẬP PetService QUA PROVIDER**
         final petService = context.read<PetService>();
         await petService.updatePet(updatedPetData);
 
@@ -232,7 +218,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
               backgroundColor: Colors.lightGreen,
             ),
           );
-          Navigator.pop(context, true); // Báo hiệu đã có thay đổi dữ liệu
+          Navigator.pop(context, true);
         }
       } on SocketException {
         _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');

@@ -6,6 +6,7 @@ import 'package:meow_n_woof/models/pet.dart';
 import 'package:meow_n_woof/services/medical_record_service.dart';
 import 'package:meow_n_woof/views/medical_record/create_medical_record.dart';
 import 'package:meow_n_woof/views/medical_record/medical_record_detail.dart';
+import 'package:provider/provider.dart';
 
 class MedicalRecordListPage extends StatefulWidget {
   final Pet selectedPet;
@@ -19,7 +20,6 @@ class MedicalRecordListPage extends StatefulWidget {
 class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   final TextEditingController _searchController = TextEditingController();
   String selectedFilter = 'Ngày';
-  final MedicalRecordService _medicalRecordService = MedicalRecordService();
 
   List<PetMedicalRecord> _allRecords = [];
   List<PetMedicalRecord> _filteredRecords = [];
@@ -27,10 +27,23 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  // Lấy instance của service một lần khi cần thiết, tránh gọi trong build
+  late MedicalRecordService recordService; // Khai báo late
+
   @override
   void initState() {
     super.initState();
-    _fetchMedicalRecords();
+    // Gán service trong initState
+    recordService = context.read<MedicalRecordService>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchMedicalRecords();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchMedicalRecords() async {
@@ -39,16 +52,17 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
       _errorMessage = null;
     });
     try {
-      print('[RecordList] - trc khi fetch - petId: ${widget.selectedPet.petId}');
-      final records = await _medicalRecordService.getMedicalRecordsByPetId(widget.selectedPet.petId!);
-      print('[RecordList] records received from service: $records');
-      setState(() {
-        _allRecords = records;
-        _filteredRecords = List.from(_allRecords);
-        _isLoading = false;
-      });
+      final records = await recordService.getMedicalRecordsByPetId(widget.selectedPet.petId!);
+      if (mounted) {
+        setState(() {
+          _allRecords = records;
+          _filteredRecords = List.from(_allRecords);
+          _isLoading = false;
+        });
+      }
       _filterRecords(_searchController.text);
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _errorMessage = 'Không thể tải hồ sơ bệnh án: ${e.toString()}';
         _isLoading = false;
@@ -72,13 +86,14 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
     final result = _allRecords.where((record) {
       switch (selectedFilter) {
         case 'Ngày':
-          return record.recordDate.toIso8601String().toLowerCase().contains(lowerKeyword);
+          final formattedDate = DateFormat('dd/MM/yyyy').format(record.recordDate.toLocal());
+          return formattedDate.toLowerCase().contains(lowerKeyword);
         case 'Bác sĩ':
           return record.veterinarian?.fullName.toLowerCase().contains(lowerKeyword) ?? false;
         case 'Triệu chứng':
           return record.symptoms?.toLowerCase().contains(lowerKeyword) ?? false;
         case 'Chẩn đoán':
-          return (record.finalDiagnosis?.toLowerCase().contains(lowerKeyword)) ?? false ||
+          return (record.finalDiagnosis?.toLowerCase().contains(lowerKeyword) ?? false) ||
               (record.preliminaryDiagnosis?.toLowerCase().contains(lowerKeyword) ?? false);
         default:
           return false;
@@ -90,13 +105,34 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
     });
   }
 
+  Future<void> _handleRecordSelect(PetMedicalRecord record) async {
+    final bool? hasUpdated = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MedicalRecordDetailPage(
+            pet: widget.selectedPet,
+            record: record,
+        ),
+      ),
+    );
+
+    if (hasUpdated == true) {
+      await _fetchMedicalRecords();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Danh sách hồ sơ khám bệnh đã được làm mới!')),
+        );
+      }
+    }
+  }
+
   void _confirmDelete(BuildContext context, PetMedicalRecord recordToDelete) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Xác nhận xoá?'),
-          content: Text('Bạn có chắc muốn xoá hồ sơ ngày ${recordToDelete.recordDate.toLocal().toString().split(' ')[0]} không?'),
+          content: Text('Bạn có chắc muốn xoá hồ sơ ngày ${DateFormat('dd/MM/yyyy').format(recordToDelete.recordDate.toLocal())} không?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -113,13 +149,16 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
 
     if (shouldDelete == true) {
       try {
-        await _medicalRecordService.deleteMedicalRecord(recordToDelete.id!);
+        if (recordToDelete.id == null) {
+          throw Exception('Medical Record ID is missing for deletion.');
+        }
+        await recordService.deleteMedicalRecord(recordToDelete.id!);
         setState(() {
           _allRecords.removeWhere((record) => record.id == recordToDelete.id);
           _filteredRecords.removeWhere((record) => record.id == recordToDelete.id);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xoá hồ sơ ngày ${recordToDelete.recordDate.toLocal().toString().split(' ')[0]}')),
+          SnackBar(content: Text('Đã xoá hồ sơ ngày ${DateFormat('dd/MM/yyyy').format(recordToDelete.recordDate.toLocal())}')),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -219,7 +258,6 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
               itemCount: _filteredRecords.length,
               itemBuilder: (context, index) {
                 final record = _filteredRecords[index];
-                // print('[RecordList] _filteredRecords: ${record.veterinarian?.fullName}'); // Có thể xóa dòng debug này
 
                 return Slidable(
                   key: ValueKey(record.id),
@@ -237,17 +275,8 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                     ],
                   ),
                   child: InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MedicalRecordDetailPage(
-                            pet: widget.selectedPet,
-                            record: record
-                          ),
-                        ),
-                      );
-                    },
+                    // Truyền bản ghi vào _handleRecordSelect
+                    onTap: () => _handleRecordSelect(record),
                     child: SizedBox(
                       width: double.infinity,
                       child: Card(
@@ -322,8 +351,9 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                 petName: widget.selectedPet.petName
             )),
           );
+          // Nếu CreateMedicalRecordScreen trả về true (tạo mới thành công)
           if (result == true) {
-            _fetchMedicalRecords();
+            _fetchMedicalRecords(); // Tải lại danh sách
           }
         },
         backgroundColor: Colors.lightBlue,

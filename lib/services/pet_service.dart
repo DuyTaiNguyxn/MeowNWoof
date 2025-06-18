@@ -108,13 +108,12 @@ class PetService {
     }
   }
 
-  // Cập nhật thông tin Pet (YÊU CẦU XÁC THỰC TOKEN)
   Future<Pet> updatePet(Pet pet) async {
     try {
       final headers = await _getHeadersWithAuth();
 
       Map<String, dynamic> petData = pet.toJson();
-      petData.remove('owner'); // Xóa trường 'owner' vì thường không cập nhật owner cùng lúc với pet
+      petData.remove('owner');
 
       final petDataJson = jsonEncode(petData);
 

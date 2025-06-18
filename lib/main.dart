@@ -36,7 +36,7 @@ void main() async {
           create: (context) => ImageUploadService(),
         ),
         Provider<MedicalRecordService>(
-          create: (context) => MedicalRecordService(),
+          create: (context) => MedicalRecordService(context.read<AuthService>()),
         ),
         ChangeNotifierProvider(create: (_) => VaccinationScheduleProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),

@@ -277,6 +277,7 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
         );
       },
     );
+    if (!mounted) return;
 
     if (shouldDelete == true) {
       setState(() {

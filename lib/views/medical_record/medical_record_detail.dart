@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/medical_record.dart';
 import 'package:intl/intl.dart';
 import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/views/medical_record/edit_medical_record.dart';
+import 'package:provider/provider.dart';
+import 'package:meow_n_woof/services/medical_record_service.dart';
 
-class MedicalRecordDetailPage extends StatelessWidget {
+class MedicalRecordDetailPage extends StatefulWidget {
   final Pet pet;
   final PetMedicalRecord record;
 
@@ -12,6 +15,61 @@ class MedicalRecordDetailPage extends StatelessWidget {
     required this.pet,
     required this.record,
   });
+
+  @override
+  State<MedicalRecordDetailPage> createState() => _MedicalRecordDetailPageState();
+}
+
+class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
+  PetMedicalRecord? _currentRecord;
+  bool _isLoading = true;
+  bool _hasDataChanged = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentRecord = widget.record;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadRecordData();
+    });
+  }
+
+  Future<void> _loadRecordData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      if (_currentRecord?.id == null) {
+        throw Exception('Medical Record ID is null. Cannot fetch details.');
+      }
+
+      final medicalRecordService = context.read<MedicalRecordService>();
+      final fetchedRecord = await medicalRecordService.getMedicalRecordById(
+        _currentRecord!.id!,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentRecord = fetchedRecord;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Không thể tải chi tiết hồ sơ: ${e.toString()}')),
+        );
+        setState(() {
+          _currentRecord = null;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
@@ -40,12 +98,39 @@ class MedicalRecordDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Chi tiết hồ sơ'),
+          backgroundColor: Colors.lightBlueAccent,
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_currentRecord == null) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Chi tiết hồ sơ'),
+          backgroundColor: Colors.lightBlueAccent,
+        ),
+        body: const Center(child: Text('Không thể tải thông tin hồ sơ khám bệnh. Vui lòng thử lại.')),
+      );
+    }
+
+    final PetMedicalRecord displayRecord = _currentRecord!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            ' Chi tiết hồ sơ - ${DateFormat('dd/MM/yyyy').format(record.recordDate.toLocal())}'),
+        title: Text('Chi tiết hồ sơ - ${DateFormat('dd/MM/yyyy').format(displayRecord.recordDate.toLocal())}'),
         centerTitle: true,
         backgroundColor: Colors.lightBlueAccent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context, _hasDataChanged);
+          },
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
@@ -65,7 +150,7 @@ class MedicalRecordDetailPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '${pet.petName} - ${pet.age} tuổi',
+                          '${widget.pet.petName} - ${widget.pet.age} tuổi',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -76,7 +161,7 @@ class MedicalRecordDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${pet.breed?.breedName ?? 'Không rõ'}  - ${pet.weight != null ? '${pet.weight!.toStringAsFixed(1)} kg' : 'Không rõ'}',
+                      '${widget.pet.breed?.breedName ?? 'Không rõ'}  - ${widget.pet.weight != null ? '${widget.pet.weight!.toStringAsFixed(1)} kg' : 'Không rõ'}',
                       style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ],
@@ -84,11 +169,9 @@ class MedicalRecordDetailPage extends StatelessWidget {
               ),
             ),
 
-            // Card thông tin bác sĩ
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              // Bỏ margin ngang, chỉ giữ margin bottom
               margin: const EdgeInsets.only(bottom: 20.0),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -97,8 +180,8 @@ class MedicalRecordDetailPage extends StatelessWidget {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: Colors.blue.shade100,
-                      backgroundImage: record.veterinarian?.avatarURL != null && record.veterinarian!.avatarURL!.isNotEmpty
-                          ? NetworkImage(record.veterinarian!.avatarURL!) as ImageProvider<Object>
+                      backgroundImage: displayRecord.veterinarian?.avatarURL != null && displayRecord.veterinarian!.avatarURL!.isNotEmpty
+                          ? NetworkImage(displayRecord.veterinarian!.avatarURL!) as ImageProvider<Object>
                           : const AssetImage('assets/images/avatar.png'),
                     ),
                     const SizedBox(width: 16),
@@ -111,7 +194,7 @@ class MedicalRecordDetailPage extends StatelessWidget {
                             style: TextStyle(fontSize: 14, color: Colors.black54),
                           ),
                           Text(
-                            record.veterinarian?.fullName ?? 'Không rõ',
+                            displayRecord.veterinarian?.fullName ?? 'Không rõ',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -130,7 +213,6 @@ class MedicalRecordDetailPage extends StatelessWidget {
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              // Bỏ margin ngang, chỉ giữ margin bottom
               margin: const EdgeInsets.only(bottom: 20.0),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -151,7 +233,7 @@ class MedicalRecordDetailPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            DateFormat('dd/MM/yyyy').format(record.recordDate.toLocal()),
+                            DateFormat('dd/MM/yyyy').format(displayRecord.recordDate.toLocal()),
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -164,12 +246,12 @@ class MedicalRecordDetailPage extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildDetailRow(
                       'Triệu chứng:',
-                      record.symptoms?.isNotEmpty == true ? record.symptoms! : 'Chưa cập nhật',
+                      displayRecord.symptoms?.isNotEmpty == true ? displayRecord.symptoms! : 'Chưa cập nhật',
                     ),
                     const SizedBox(height: 20),
                     _buildDetailRow(
                       'Chẩn đoán ban đầu:',
-                      record.preliminaryDiagnosis?.isNotEmpty == true ? record.preliminaryDiagnosis! : 'Chưa có',
+                      displayRecord.preliminaryDiagnosis?.isNotEmpty == true ? displayRecord.preliminaryDiagnosis! : 'Chưa có',
                     ),
                     const SizedBox(height: 20),
                     Padding(
@@ -186,7 +268,7 @@ class MedicalRecordDetailPage extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            record.finalDiagnosis?.isNotEmpty == true ? record.finalDiagnosis! : 'Chưa có',
+                            displayRecord.finalDiagnosis?.isNotEmpty == true ? displayRecord.finalDiagnosis! : 'Chưa có',
                             style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
@@ -199,12 +281,12 @@ class MedicalRecordDetailPage extends StatelessWidget {
                     const SizedBox(height: 20),
                     _buildDetailRow(
                       'Phương pháp điều trị:',
-                      record.treatmentMethod?.isNotEmpty == true ? record.treatmentMethod! : 'Chưa có',
+                      displayRecord.treatmentMethod?.isNotEmpty == true ? displayRecord.treatmentMethod! : 'Chưa có',
                     ),
                     const SizedBox(height: 20),
                     _buildDetailRow(
                       'Ghi chú bác sĩ:',
-                      record.veterinarianNote?.isNotEmpty == true ? record.veterinarianNote! : 'Không có ghi chú',
+                      displayRecord.veterinarianNote?.isNotEmpty == true ? displayRecord.veterinarianNote! : 'Không có ghi chú',
                     ),
                   ],
                 ),
@@ -220,13 +302,21 @@ class MedicalRecordDetailPage extends StatelessWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed:() {
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (_) => EditMedicalRecordPage(),
-                    //   ),
-                    // );
+                  onPressed: _isLoading || _currentRecord == null ? null : () async {
+                    final bool? recordUpdated = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => EditMedicalRecordScreen(
+                          medicalRecord: displayRecord,
+                          petId: widget.pet.petId!,
+                          petName: widget.pet.petName,
+                        ),
+                      ),
+                    );
+                    if (recordUpdated == true) {
+                      await _loadRecordData();
+                      _hasDataChanged = true;
+                    }
                   },
                   icon: const Icon(Icons.note_alt_outlined, color: Colors.white),
                   label: const Text('Chỉnh sửa', style: TextStyle(color: Colors.white)),
@@ -242,8 +332,8 @@ class MedicalRecordDetailPage extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    // Len dơn thuoc
+                  onPressed: _isLoading || _currentRecord == null ? null : () async {
+                    // Logic cho nút "Lên đơn thuốc"
                   },
                   icon: const Icon(Icons.medication, color: Colors.white),
                   label: const Text('Lên đơn thuốc', style: TextStyle(color: Colors.white)),

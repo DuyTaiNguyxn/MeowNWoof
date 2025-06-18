@@ -282,6 +282,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
         );
       },
     );
+    if (!mounted) return;
 
     if (shouldDelete == true) {
       setState(() {

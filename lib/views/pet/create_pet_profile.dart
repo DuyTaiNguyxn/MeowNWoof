@@ -9,7 +9,7 @@ import 'package:meow_n_woof/services/image_upload_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
 import 'package:meow_n_woof/services/species_breed_service.dart';
 import 'package:meow_n_woof/widgets/image_picker_widget.dart';
-import 'package:provider/provider.dart'; // **ĐẢM BẢO CÓ DÒNG NÀY**
+import 'package:provider/provider.dart';
 
 class CreatePetProfilePage extends StatefulWidget {
   const CreatePetProfilePage({super.key});
@@ -39,15 +39,9 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
   bool _isLoadingDropdowns = true;
   String? _dropdownErrorMessage;
 
-  // **XÓA CÁC DÒNG KHỞI TẠO CỤC BỘ NÀY:**
-  // final PetService _petService = PetService();
-  // final SpeciesBreedService _speciesBreedService = SpeciesBreedService();
-  // final ImageUploadService _imageUploadService = ImageUploadService();
-
   @override
   void initState() {
     super.initState();
-    // **ĐẢM BẢO GỌI _loadDropdownData SAU KHI CONTEXT SẴN SÀNG**
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadDropdownData();
     });
@@ -60,10 +54,9 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
     });
 
     try {
-      // **TRUY CẬP SpeciesBreedService QUA PROVIDER**
       final speciesBreedService = context.read<SpeciesBreedService>();
       _availableSpecies = await speciesBreedService.getSpecies();
-      _availableBreeds = []; // Luôn khởi tạo rỗng
+      _availableBreeds = [];
       if (mounted) {
         setState(() {
           _isLoadingDropdowns = false;
@@ -99,26 +92,25 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
   void _onSpeciesChanged(int? newSpeciesId) {
     setState(() {
       _selectedSpeciesId = newSpeciesId;
-      _selectedBreedId = null; // Reset giống khi thay đổi loài
-      _availableBreeds.clear(); // Xóa danh sách giống cũ ngay lập tức
-      _dropdownErrorMessage = null; // Reset thông báo lỗi cho dropdown
+      _selectedBreedId = null;
+      _availableBreeds.clear();
+      _dropdownErrorMessage = null;
 
       if (newSpeciesId != null) {
-        _isLoadingDropdowns = true; // Bắt đầu tải giống mới
-        // **TRUY CẬP SpeciesBreedService QUA PROVIDER TRONG HÀM NÀY**
+        _isLoadingDropdowns = true;
         final speciesBreedService = context.read<SpeciesBreedService>();
         speciesBreedService.getBreedsBySpeciesId(newSpeciesId).then((breeds) {
           if (mounted) {
             setState(() {
               _availableBreeds = breeds;
-              _isLoadingDropdowns = false; // Kết thúc tải
+              _isLoadingDropdowns = false;
             });
           }
         }).catchError((error) {
           if (mounted) {
             setState(() {
               _dropdownErrorMessage = error.toString();
-              _isLoadingDropdowns = false; // Kết thúc tải với lỗi
+              _isLoadingDropdowns = false;
             });
           }
           if (error is SocketException) {
@@ -130,8 +122,8 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
           }
         });
       } else {
-        _isLoadingDropdowns = false; // Nếu không chọn loài nào, dừng loading và không tải giống
-        _availableBreeds = []; // Đảm bảo danh sách giống rỗng
+        _isLoadingDropdowns = false;
+        _availableBreeds = [];
       }
     });
   }
@@ -167,7 +159,6 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
       String? imageUrlToSave;
       try {
         if (_selectedImage != null) {
-          // **TRUY CẬP ImageUploadService QUA PROVIDER**
           final imageUploadService = context.read<ImageUploadService>();
           imageUrlToSave = await imageUploadService.uploadImage(
             imageFile: _selectedImage!,
@@ -178,9 +169,10 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         }
       } catch (e) {
         print('Cloudinary upload error: $e');
-        _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}'); // Thêm SnackBar cho lỗi upload
-        return; // Dừng lại nếu upload ảnh lỗi
+        _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}');
+        return;
       }
+      if (!mounted) return;
 
       final newPet = Pet(
         petName: petNameController.text,
@@ -191,17 +183,15 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         weight: double.tryParse(weightController.text),
         imageURL: imageUrlToSave,
         owner: newOwner,
-        // petId, createdAt, updatedAt thường được backend tạo ra
       );
 
       try {
-        // **TRUY CẬP PetService QUA PROVIDER**
         final petService = context.read<PetService>();
         await petService.createPet(newPet);
 
         if (mounted) {
           _showSnackBar('Đã tạo hồ sơ thú cưng thành công!');
-          Navigator.pop(context, true); // Báo hiệu đã tạo thành công
+          Navigator.pop(context, true);
         }
       } on SocketException {
         _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
@@ -243,7 +233,7 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 60,
-                  backgroundColor: Colors.grey[200], // Màu nền mặc định
+                  backgroundColor: Colors.grey[200],
                   backgroundImage: _selectedImage != null
                       ? FileImage(_selectedImage!)
                       : const AssetImage('assets/images/logo_bg.png') as ImageProvider,
@@ -272,7 +262,6 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
               _buildTextField('Tuổi (năm)', ageController, isNumber: true),
               _buildTextField('Cân nặng (kg)', weightController, isNumber: true),
 
-              // Dropdown cho Loài
               _isLoadingDropdowns
                   ? const Center(child: CircularProgressIndicator())
                   : _dropdownErrorMessage != null
@@ -286,7 +275,6 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
                 onChanged: _onSpeciesChanged,
               ),
 
-              // Dropdown cho Giống: CHỈ HIỂN THỊ KHI _selectedSpeciesId ĐÃ CÓ GIÁ TRỊ VÀ KHÔNG ĐANG TẢI
               if (_selectedSpeciesId != null)
                 _isLoadingDropdowns
                     ? const Center(child: CircularProgressIndicator())

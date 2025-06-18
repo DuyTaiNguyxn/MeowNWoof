@@ -22,10 +22,9 @@ class ImagePickerWidget {
   }
 
   static Future<File?> showImageSourceSelectionSheet(BuildContext context) async {
-    // Nếu chúng không static, bạn cần khởi tạo một instance:
-    final ImagePickerWidget ipwidget = ImagePickerWidget();
+    final ImagePickerWidget picker = ImagePickerWidget();
 
-    return showModalBottomSheet<File?>( // <-- Đảm bảo kiểu trả về là File?
+    return showModalBottomSheet<File?>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -38,16 +37,16 @@ class ImagePickerWidget {
                 leading: const Icon(Icons.camera_alt),
                 title: const Text('Chụp ảnh'),
                 onTap: () async {
-                  final File? image = await ipwidget.pickImageFromCamera(); // Chụp ảnh
-                  Navigator.pop(bc, image); // <-- Truyền ảnh trực tiếp khi đóng bottom sheet
+                  final File? image = await picker.pickImageFromCamera();
+                  Navigator.pop(bc, image);
                 },
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
                 title: const Text('Chọn từ thư viện'),
                 onTap: () async {
-                  final File? image = await ipwidget.pickImageFromGallery(); // Chọn ảnh
-                  Navigator.pop(bc, image); // <-- Truyền ảnh trực tiếp khi đóng bottom sheet
+                  final File? image = await picker.pickImageFromGallery();
+                  Navigator.pop(bc, image);
                 },
               ),
             ],
