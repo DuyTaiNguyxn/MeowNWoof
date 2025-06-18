@@ -69,23 +69,53 @@ class MedicalRecordService {
   }
 
   Future<PetMedicalRecord> createMedicalRecord(PetMedicalRecord record) async {
+    // --- LOGGING THÔNG TIN ĐƯỢC TRUYỀN VÀO ---
+    print('--- STARTING CREATE MEDICAL RECORD REQUEST ---');
+    print('[MR Service]Input MedicalRecord object: $record');
+    print('[MR Service]Input PetMedicalRecord ID: ${record.id}');
+    print('[MR Service]Input PetMedicalRecord Pet ID: ${record.petId}');
+    print('[MR Service]Input PetMedicalRecord Symptoms: ${record.symptoms}');
+    print('[MR Service]Input PetMedicalRecord Record Date: ${record.recordDate.toIso8601String()}');
+    print('[MR Service]Input PetMedicalRecord Final Diagnosis: ${record.finalDiagnosis}');
+    print('[MR Service]Input PetMedicalRecord Veterinarian ID: ${record.veterinarianId}');
+    // Thêm các trường khác nếu cần debug cụ thể
+
     try {
       final headers = await _getHeadersWithAuth();
+      final requestBody = json.encode(record.toJson());
+
+      // --- LOGGING THÔNG TIN GỬI ĐI ---
+      print('[MR Service]Request Headers: $headers');
+      print('[MR Service]Request Body (JSON): $requestBody');
+
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: headers,
-        body: json.encode(record.toJson()),
+        body: requestBody,
       );
+
+      // --- LOGGING THÔNG TIN PHẢN HỒI ---
+      print('[MR Service]Response Status Code: ${response.statusCode}');
+      print('[MR Service]Response Body: ${response.body}');
+      print('--- ENDING CREATE MEDICAL RECORD REQUEST ---');
+
 
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
-        return PetMedicalRecord.fromJson(responseBody['data']);
+        // Đảm bảo rằng 'data' tồn tại và là Map
+        if (responseBody.containsKey('data') && responseBody['data'] is Map<String, dynamic>) {
+          return PetMedicalRecord.fromJson(responseBody['data']);
+        } else {
+          throw Exception('Invalid response format: "data" field missing or not a map.');
+        }
       } else {
         final Map<String, dynamic> errorBody = json.decode(response.body);
-        throw Exception('Failed to create medical record: ${errorBody['message']}');
+        // Cố gắng lấy thông báo lỗi chi tiết từ server
+        final String errorMessage = errorBody['message'] ?? 'Unknown error';
+        throw Exception('Failed to create medical record: $errorMessage (Status Code: ${response.statusCode})');
       }
     } catch (e) {
-      print('Error in createMedicalRecord: $e');
+      print('Error in createMedicalRecord catch block: $e'); // Log error cụ thể
       throw Exception('Failed to connect to server or process data: $e');
     }
   }

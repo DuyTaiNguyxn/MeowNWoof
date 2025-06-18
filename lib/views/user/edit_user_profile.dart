@@ -271,16 +271,13 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                 );
                 return;
               }
-
-              // Nếu có thay đổi, thì gọi hàm _saveUser để xử lý việc lưu
               await _saveUser();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 6, 25, 81),
+              backgroundColor: Colors.lightBlue,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            icon: const Icon(Icons.check, color: Colors.white),
             label: const Text(
               'Lưu thay đổi',
               style: TextStyle(fontSize: 16, color: Colors.white),

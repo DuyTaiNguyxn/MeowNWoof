@@ -9,6 +9,7 @@ import 'package:meow_n_woof/services/image_upload_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
 import 'package:meow_n_woof/services/species_breed_service.dart';
 import 'package:meow_n_woof/widgets/image_picker_widget.dart';
+import 'package:provider/provider.dart'; // **ĐẢM BẢO CÓ DÒNG NÀY**
 
 class CreatePetProfilePage extends StatefulWidget {
   const CreatePetProfilePage({super.key});
@@ -20,7 +21,6 @@ class CreatePetProfilePage extends StatefulWidget {
 class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
   final _formKey = GlobalKey<FormState>();
   File? _selectedImage;
-  // final picker = ImagePicker(); // Không cần dùng trực tiếp nữa
 
   final TextEditingController petNameController = TextEditingController();
   final TextEditingController ageController = TextEditingController();
@@ -39,16 +39,18 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
   bool _isLoadingDropdowns = true;
   String? _dropdownErrorMessage;
 
-  final PetService _petService = PetService();
-  final SpeciesBreedService _speciesBreedService = SpeciesBreedService();
-  final ImageUploadService _imageUploadService = ImageUploadService();
-  // Không cần khởi tạo ImagePickingService ở đây nếu dùng hàm static
-  // final ImagePickingService _imagePickingService = ImagePickingService(); // Bỏ dòng này
+  // **XÓA CÁC DÒNG KHỞI TẠO CỤC BỘ NÀY:**
+  // final PetService _petService = PetService();
+  // final SpeciesBreedService _speciesBreedService = SpeciesBreedService();
+  // final ImageUploadService _imageUploadService = ImageUploadService();
 
   @override
   void initState() {
     super.initState();
-    _loadDropdownData();
+    // **ĐẢM BẢO GỌI _loadDropdownData SAU KHI CONTEXT SẴN SÀNG**
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDropdownData();
+    });
   }
 
   Future<void> _loadDropdownData() async {
@@ -58,7 +60,9 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
     });
 
     try {
-      _availableSpecies = await _speciesBreedService.getSpecies();
+      // **TRUY CẬP SpeciesBreedService QUA PROVIDER**
+      final speciesBreedService = context.read<SpeciesBreedService>();
+      _availableSpecies = await speciesBreedService.getSpecies();
       _availableBreeds = []; // Luôn khởi tạo rỗng
       if (mounted) {
         setState(() {
@@ -101,7 +105,9 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
 
       if (newSpeciesId != null) {
         _isLoadingDropdowns = true; // Bắt đầu tải giống mới
-        _speciesBreedService.getBreedsBySpeciesId(newSpeciesId).then((breeds) {
+        // **TRUY CẬP SpeciesBreedService QUA PROVIDER TRONG HÀM NÀY**
+        final speciesBreedService = context.read<SpeciesBreedService>();
+        speciesBreedService.getBreedsBySpeciesId(newSpeciesId).then((breeds) {
           if (mounted) {
             setState(() {
               _availableBreeds = breeds;
@@ -130,7 +136,6 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
     });
   }
 
-  // Sửa hàm _pickImage để gọi ImagePickingService
   Future<void> _pickImage() async {
     final File? pickedImage = await ImagePickerWidget.showImageSourceSelectionSheet(context);
     if (pickedImage != null) {
@@ -162,7 +167,9 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
       String? imageUrlToSave;
       try {
         if (_selectedImage != null) {
-          imageUrlToSave = await _imageUploadService.uploadImage(
+          // **TRUY CẬP ImageUploadService QUA PROVIDER**
+          final imageUploadService = context.read<ImageUploadService>();
+          imageUrlToSave = await imageUploadService.uploadImage(
             imageFile: _selectedImage!,
             uploadPreset: 'pet_unsigned_upload',
             folder: 'pet_images',
@@ -171,7 +178,8 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         }
       } catch (e) {
         print('Cloudinary upload error: $e');
-        return;
+        _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}'); // Thêm SnackBar cho lỗi upload
+        return; // Dừng lại nếu upload ảnh lỗi
       }
 
       final newPet = Pet(
@@ -183,14 +191,17 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
         weight: double.tryParse(weightController.text),
         imageURL: imageUrlToSave,
         owner: newOwner,
+        // petId, createdAt, updatedAt thường được backend tạo ra
       );
 
       try {
-        await _petService.createPet(newPet);
+        // **TRUY CẬP PetService QUA PROVIDER**
+        final petService = context.read<PetService>();
+        await petService.createPet(newPet);
 
         if (mounted) {
           _showSnackBar('Đã tạo hồ sơ thú cưng thành công!');
-          Navigator.pop(context, true);
+          Navigator.pop(context, true); // Báo hiệu đã tạo thành công
         }
       } on SocketException {
         _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
@@ -228,17 +239,23 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
           key: _formKey,
           child: Column(
             children: [
-              // Ảnh thú cưng
               GestureDetector(
                 onTap: _pickImage,
                 child: CircleAvatar(
                   radius: 60,
+                  backgroundColor: Colors.grey[200], // Màu nền mặc định
                   backgroundImage: _selectedImage != null
                       ? FileImage(_selectedImage!)
                       : const AssetImage('assets/images/logo_bg.png') as ImageProvider,
-                  child: _selectedImage == null
-                      ? const Icon(Icons.add_a_photo, size: 30, color: Colors.white70)
-                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.black12,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.add_a_photo, size: 30, color: Colors.white70),
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -302,11 +319,10 @@ class _CreatePetProfilePageState extends State<CreatePetProfilePage> {
           child: ElevatedButton.icon(
             onPressed: _createPet,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 6, 25, 81),
+              backgroundColor: Colors.lightBlue,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            icon: const Icon(Icons.check_circle, color: Colors.white),
             label: const Text(
               'Tạo hồ sơ',
               style: TextStyle(fontSize: 16, color: Colors.white),

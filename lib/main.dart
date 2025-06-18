@@ -4,6 +4,11 @@ import 'package:meow_n_woof/app_settings.dart';
 import 'package:meow_n_woof/providers/appointment_provider.dart';
 import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
+import 'package:meow_n_woof/services/image_upload_service.dart';
+import 'package:meow_n_woof/services/medical_record_service.dart';
+import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/services/species_breed_service.dart';
+import 'package:meow_n_woof/services/user_service.dart';
 import 'package:meow_n_woof/views/login.dart';
 import 'package:meow_n_woof/views/home.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +23,21 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => appSettings),
         ChangeNotifierProvider(create: (_) => AuthService()),
+        Provider<UserService>(
+          create: (context) => UserService(context.read<AuthService>()),
+        ),
+        Provider<PetService>(
+          create: (context) => PetService(context.read<AuthService>()),
+        ),
+        Provider<SpeciesBreedService>(
+          create: (context) => SpeciesBreedService(),
+        ),
+        Provider<ImageUploadService>(
+          create: (context) => ImageUploadService(),
+        ),
+        Provider<MedicalRecordService>(
+          create: (context) => MedicalRecordService(),
+        ),
         ChangeNotifierProvider(create: (_) => VaccinationScheduleProvider()),
         ChangeNotifierProvider(create: (_) => AppointmentProvider()),
       ],

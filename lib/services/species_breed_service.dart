@@ -5,7 +5,7 @@ import 'package:meow_n_woof/models/species.dart';
 import 'package:meow_n_woof/models/breed.dart';
 
 class SpeciesBreedService {
-  static const String _baseUrl = 'http://10.0.2.2:3000/api'; // Hoặc IP của bạn
+  static const String _baseUrl = 'http://10.0.2.2:3000/api';
 
   Future<List<Species>> getSpecies() async {
     try {

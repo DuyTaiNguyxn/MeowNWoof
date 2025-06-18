@@ -282,20 +282,20 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              Text('🤒 Triệu chứng: ${record.symptoms ?? 'N/A'}'),
+                              Text('🤒 Triệu chứng: ${record.symptoms ?? 'Chưa cập nhật'}'),
                               const SizedBox(height: 6),
                               RichText(
                                 text: TextSpan(
                                   style: const TextStyle(color: Colors.black),
                                   children: [
-                                    const TextSpan(text: '📝 Chẩn đoán ban đầu: '),
+                                    const TextSpan(text: '📝 Chẩn đoán: '),
                                     TextSpan(
-                                      text: record.preliminaryDiagnosis?.isNotEmpty == true
-                                          ? record.preliminaryDiagnosis!
+                                      text: record.finalDiagnosis?.isNotEmpty == true
+                                          ? record.finalDiagnosis!
                                           : 'Chưa có',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.purple,
+                                        color: Colors.orange,
                                       ),
                                     ),
                                   ],
@@ -318,7 +318,7 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => CreateMedicalRecordScreen(
-                petId: widget.selectedPet.petId,
+                petId: widget.selectedPet.petId!,
                 petName: widget.selectedPet.petName
             )),
           );

@@ -2,13 +2,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:meow_n_woof/models/pet.dart';
-import 'package:meow_n_woof/services/auth_service.dart'; // Import AuthService của bạn
+import 'package:meow_n_woof/services/auth_service.dart';
 
 class PetService {
   static const String _baseUrl = 'http://10.0.2.2:3000/api'; // Android Emulator
   // static const String _baseUrl = 'http://192.168.1.XX:3000/api'; // Physical Android/iOS
 
-  final AuthService _authService = AuthService(); // Khởi tạo AuthService để lấy token
+  final AuthService _authService;
+
+  PetService(this._authService);
 
   // Hàm helper để tạo headers có token
   Future<Map<String, String>> _getHeadersWithAuth() async {
@@ -18,12 +20,11 @@ class PetService {
     }
     return {
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer $token', // Thêm token vào header
+      'Authorization': 'Bearer $token',
     };
   }
 
   // Lấy danh sách Pet (có thể bao gồm thông tin owner, species, breed nhúng)
-  // Giả sử API này KHÔNG yêu cầu xác thực token (thường là public)
   Future<List<Pet>> getPets() async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/pets'));
@@ -31,7 +32,9 @@ class PetService {
       if (response.statusCode == 200) {
         try {
           final List<dynamic> petJsonList = jsonDecode(response.body);
-          return petJsonList.map((json) => Pet.fromJson(json)).toList();
+          List<Pet> pets = petJsonList.map((json) => Pet.fromJson(json)).toList();
+          pets.sort((a, b) => (b.petId ?? 0).compareTo(a.petId ?? 0));
+          return pets;
         } on FormatException catch (e) {
           print('DEBUG: JSON format error in getPets: $e');
           throw Exception('Lỗi định dạng JSON khi tải pets: $e');
@@ -51,9 +54,9 @@ class PetService {
   }
 
   // Lấy thông tin một Pet theo ID
-  // Giả sử API này KHÔNG yêu cầu xác thực token (thường là public)
   Future<Pet> getPetById(int petId) async {
     try {
+      // Tương tự, nếu API này yêu cầu xác thực, hãy dùng headersWithAuth
       final response = await http.get(Uri.parse('$_baseUrl/pets/$petId'));
       if (response.statusCode == 200) {
         return Pet.fromJson(jsonDecode(response.body));
@@ -74,24 +77,22 @@ class PetService {
   // Thêm một Pet mới (YÊU CẦU XÁC THỰC TOKEN)
   Future<Pet> createPet(Pet pet) async {
     try {
-      final headers = await _getHeadersWithAuth(); // Lấy headers kèm token
+      final headers = await _getHeadersWithAuth();
 
-      // --- BẮT ĐẦU PHẦN THÊM LOG ---
       final petDataJson = jsonEncode(pet.toJson());
       print('DEBUG: Data being sent to backend for pet creation:');
-      print(petDataJson); // In ra chuỗi JSON
-      // --- KẾT THÚC PHẦN THÊM LOG ---
+      print(petDataJson);
 
       final response = await http.post(
         Uri.parse('$_baseUrl/pets'),
         headers: headers,
-        body: petDataJson, // Sử dụng chuỗi JSON đã in ra
+        body: petDataJson,
       );
 
       print('DEBUG: createPet Status Code: ${response.statusCode}');
       print('DEBUG: createPet Response Body: ${response.body}');
 
-      if (response.statusCode == 201) { // 201 Created
+      if (response.statusCode == 201) {
         return Pet.fromJson(jsonDecode(response.body));
       } else {
         String errorMessage = 'Failed to create pet';
@@ -113,17 +114,16 @@ class PetService {
       final headers = await _getHeadersWithAuth();
 
       Map<String, dynamic> petData = pet.toJson();
-
-      petData.remove('owner');
+      petData.remove('owner'); // Xóa trường 'owner' vì thường không cập nhật owner cùng lúc với pet
 
       final petDataJson = jsonEncode(petData);
 
-      print('DEBUG: Data being sent for update: $petDataJson'); // Để kiểm tra payload
+      print('DEBUG: Data being sent for update: $petDataJson');
 
       final response = await http.put(
         Uri.parse('$_baseUrl/pets/${pet.petId}'),
         headers: headers,
-        body: petDataJson, // Sử dụng chuỗi JSON đã chỉnh sửa
+        body: petDataJson,
       );
 
       print('DEBUG: updatePet Status Code: ${response.statusCode}');
@@ -150,10 +150,10 @@ class PetService {
   // Xóa một Pet (YÊU CẦU XÁC THỰC TOKEN)
   Future<void> deletePet(int petId) async {
     try {
-      final headers = await _getHeadersWithAuth(); // Lấy headers kèm token
+      final headers = await _getHeadersWithAuth();
       final response = await http.delete(
         Uri.parse('$_baseUrl/pets/$petId'),
-        headers: headers, // Sử dụng headers đã có token
+        headers: headers,
       );
 
       print('DEBUG: deletePet Status Code: ${response.statusCode}');

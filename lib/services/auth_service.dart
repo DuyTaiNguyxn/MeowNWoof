@@ -40,7 +40,7 @@ class AuthService extends ChangeNotifier {
   Future<void> _saveUserToPrefs(User user) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('user_data', jsonEncode(user.toJson()));
-    print('AuthService: Đã lưu user vào SharedPreferences. Birth: ${user.birth.toIso8601String() ?? 'N/A'}');
+    print('AuthService: Đã lưu user vào SharedPreferences. Birth: ${user.birth.toIso8601String()}');
   }
 
   Future<void> _removeUserFromPrefs() async {

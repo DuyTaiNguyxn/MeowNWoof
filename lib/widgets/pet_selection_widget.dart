@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/pet.dart';
-import 'package:meow_n_woof/services/pet_service.dart'; // Import PetService
+import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:provider/provider.dart';
 
 class PetSelectionWidget extends StatefulWidget {
   final Pet? selectedPet;
@@ -17,42 +18,43 @@ class PetSelectionWidget extends StatefulWidget {
 }
 
 class _PetSelectionWidgetState extends State<PetSelectionWidget> {
-  // Thay thế dữ liệu hardcoded bằng danh sách rỗng, sẽ tải từ API
   List<Pet> _allPets = [];
   List<Pet> _filteredPets = [];
   final TextEditingController _searchController = TextEditingController();
   String selectedFilter = 'Tên thú cưng';
 
-  final PetService _petService = PetService(); // Khởi tạo PetService
-  bool _isLoadingPets = true; // Biến trạng thái để hiển thị loading
-  String? _errorMessage; // Biến để hiển thị thông báo lỗi
+  bool _isLoadingPets = true;
+  String? _errorMessage;
 
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearch);
-    _loadPets(); // Tải danh sách pet từ API
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPets();
+    });
   }
 
-  // Hàm mới: Tải danh sách thú cưng từ API
   Future<void> _loadPets() async {
     setState(() {
       _isLoadingPets = true;
       _errorMessage = null;
     });
     try {
-      final pets = await _petService.getPets();
+      final petService = context.read<PetService>();
+      final pets = await petService.getPets();
+
       if (mounted) {
         setState(() {
           _allPets = pets;
-          _filteredPets = List.from(_allPets); // Khởi tạo filteredPets
+          _filteredPets = List.from(_allPets);
           _isLoadingPets = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString();
+          _errorMessage = 'Lỗi tải danh sách thú cưng: ${e.toString()}';
           _isLoadingPets = false;
         });
       }
@@ -64,13 +66,12 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
 
     setState(() {
       _filteredPets = _allPets.where((pet) {
-        // Truy cập thông tin owner từ Pet object. Cần kiểm tra null.
         final ownerName = pet.owner?.ownerName.toLowerCase() ?? '';
         final ownerPhone = pet.owner?.phone.toLowerCase() ?? '';
 
         switch (selectedFilter) {
           case 'Tên thú cưng':
-            return pet.petName.toLowerCase().contains(keyword); // pet.petName thay vì pet.name
+            return pet.petName.toLowerCase().contains(keyword);
           case 'Chủ nuôi':
             return ownerName.contains(keyword);
           case 'Số điện thoại':
@@ -91,18 +92,15 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Chọn thú cưng'),
+        backgroundColor: Colors.lightBlueAccent,
+      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 20),
-            const Center(
-              child: Text(
-                'Chọn Thú cưng',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-            ),
             const SizedBox(height: 20),
             Row(
               children: [
@@ -148,7 +146,6 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
               ],
             ),
             const SizedBox(height: 12),
-            // Hiển thị trạng thái tải hoặc lỗi
             _isLoadingPets
                 ? const Expanded(
               child: Center(child: CircularProgressIndicator()),
@@ -168,7 +165,7 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
                       ),
                       const SizedBox(height: 10),
                       ElevatedButton(
-                        onPressed: _loadPets, // Thử tải lại
+                        onPressed: _loadPets,
                         child: const Text('Thử lại'),
                       ),
                     ],
@@ -183,7 +180,6 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
                 itemCount: _filteredPets.length,
                 itemBuilder: (context, index) {
                   final pet = _filteredPets[index];
-                  // Sử dụng petId để so sánh, vì widget.selectedPet có thể không phải là cùng một instance object
                   final isSelected = widget.selectedPet?.petId == pet.petId;
 
                   return Card(
@@ -198,21 +194,20 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
                         backgroundImage: NetworkImage(pet.imageURL!),
                         radius: 24,
                       )
-                          : const Icon(Icons.pets, size: 32),
+                          : const Icon(Icons.pets, size: 48),
                       title: Text(
-                        pet.petName, // Đã đổi từ pet.name sang pet.petName
+                        pet.petName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
                       ),
                       subtitle: Text(
-                        // Truy cập thông tin chủ nuôi từ PetOwner object bên trong Pet
                         '${pet.owner?.ownerName ?? 'N/A'} - ${pet.owner?.phone ?? 'N/A'}',
                         style: TextStyle(color: Colors.grey[700]),
                       ),
                       onTap: () {
-                        widget.onPetSelected(pet);
+                        Navigator.pop(context, pet);
                       },
                     ),
                   );

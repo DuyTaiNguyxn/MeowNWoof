@@ -4,11 +4,12 @@ import 'package:meow_n_woof/services/pet_service.dart'; // Đảm bảo import P
 import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
 import 'package:meow_n_woof/views/pet/edit_pet_profile.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:provider/provider.dart'; // **ĐẢM BẢO CÓ DÒNG NÀY**
 
 // CHUYỂN TỪ StatelessWidget THÀNH StatefulWidget
 class PetProfileDetail extends StatefulWidget {
   final int petId; // Chỉ nhận petId
-  final String petName;
+  final String petName; // Giữ lại để hiển thị tên pet ban đầu trong AppBar khi đang tải
 
   const PetProfileDetail({
     super.key,
@@ -21,7 +22,9 @@ class PetProfileDetail extends StatefulWidget {
 }
 
 class _PetProfileDetailState extends State<PetProfileDetail> {
-  final PetService _petService = PetService(); // Khởi tạo PetService
+  // **XÓA DÒNG KHỞI TẠO CỤC BỘ NÀY:**
+  // final PetService _petService = PetService();
+
   Pet? _currentPet; // Biến trạng thái để lưu đối tượng Pet đầy đủ
   bool _isLoading = true; // Biến trạng thái để quản lý loading indicator
   bool _hasDataChanged = false;
@@ -29,17 +32,24 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
   @override
   void initState() {
     super.initState();
-    _loadPetData(); // Gọi hàm tải dữ liệu khi trang khởi tạo
+    // **ĐẢM BẢO GỌI _loadPetData SAU KHI CONTEXT SẴN SÀNG**
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPetData(); // Gọi hàm tải dữ liệu khi trang khởi tạo
+    });
   }
 
-  // HÀM _loadPetData CỦA BẠN (như bạn yêu cầu)
+  // HÀM _loadPetData CỦA BẠN
   Future<void> _loadPetData() async {
     setState(() {
       _isLoading = true; // Bắt đầu tải, hiển thị loading indicator
     });
     try {
+      // **ĐÂY LÀ CÁCH MỚI ĐỂ TRUY CẬP PetService QUA PROVIDER**
+      // Sử dụng context.read<PetService>() vì chúng ta chỉ cần đọc service một lần
+      // và không cần widget rebuild khi PetService thay đổi.
+      final petService = context.read<PetService>();
       // Gọi service để lấy dữ liệu pet đầy đủ dựa trên petId được truyền vào
-      final fetchedPet = await _petService.getPetById(widget.petId);
+      final fetchedPet = await petService.getPetById(widget.petId);
       if (mounted) { // Đảm bảo widget vẫn còn tồn tại trước khi setState
         setState(() {
           _currentPet = fetchedPet; // Cập nhật pet đầy đủ vào biến trạng thái
@@ -47,11 +57,12 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
       }
     } catch (e) {
       if (mounted) {
-        // Xử lý lỗi: hiển thị SnackBar hoặc thông báo trên UI
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Không thể tải chi tiết thú cưng: ${e.toString()}')),
         );
-        _currentPet = null; // Đặt về null nếu có lỗi tải
+        setState(() { // Cập nhật trạng thái ngay cả khi có lỗi
+          _currentPet = null; // Đặt về null nếu có lỗi tải
+        });
       }
     } finally {
       if (mounted) {
@@ -74,13 +85,14 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
     );
 
     if (hasUpdated == true) {
-      await _loadPetData();
+      await _loadPetData(); // Tải lại dữ liệu sau khi chỉnh sửa
       _hasDataChanged = true;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Chỉ truy cập thông tin pet sau khi _currentPet đã được tải
     final ownerName = _currentPet?.owner?.ownerName ?? 'Chưa cập nhật';
     final ownerPhone = _currentPet?.owner?.phone ?? 'Chưa cập nhật';
     final ownerEmail = _currentPet?.owner?.email ?? 'Chưa cập nhật';
@@ -89,11 +101,11 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
     final speciesName = _currentPet?.species?.speciesName ?? 'Chưa cập nhật';
     final breedName = _currentPet?.breed?.breedName ?? 'Chưa cập nhật';
 
-    print('Pet ID: ${widget.petId} (Passed), Current Pet ID: ${_currentPet?.petId} (Loaded)');
+    // Xóa các dòng print debug trong phần build() của widget để tránh spam console
+    // print('Pet ID: ${widget.petId} (Passed), Current Pet ID: ${_currentPet?.petId} (Loaded)');
 
     return Scaffold(
       appBar: AppBar(
-        // Hiển thị tên pet nếu đã tải xong, hoặc 'Đang tải...' / 'Chi tiết thú cưng'
         title: Text('Chi tiết thú cưng - ${_currentPet?.petName ?? widget.petName}'),
         backgroundColor: Colors.lightBlueAccent,
         leading: IconButton( // Thêm nút back tùy chỉnh để kiểm soát giá trị trả về
@@ -106,29 +118,52 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
       ),
       body: _isLoading // Kiểm tra trạng thái tải
           ? const Center(child: CircularProgressIndicator()) // Hiển thị loading khi đang tải
-          : _currentPet == null
-          ? const Center(child: Text('Không thể tải thông tin thú cưng.')) // Xử lý trường hợp lỗi tải và _currentPet là null
+          : _currentPet == null // Kiểm tra nếu tải xong nhưng _currentPet vẫn null (do lỗi)
+          ? const Center(child: Text('Không thể tải thông tin thú cưng. Vui lòng thử lại.'))
           : SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildPetImage(_currentPet!), // Truyền _currentPet! vào hàm buildPetImage
+            _buildPetImage(_currentPet!),
             const SizedBox(height: 20),
-            const Text('Thông tin thú cưng', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const Divider(),
-            _buildDetailRow('Tên:', _currentPet!.petName),
-            _buildDetailRow('Loài:', speciesName),
-            _buildDetailRow('Giống:', breedName),
-            _buildDetailRow('Giới tính:', _currentPet!.gender ?? 'Chưa cập nhật'),
-            _buildDetailRow('Tuổi:', _currentPet!.age != null ? '${_currentPet!.age} tuổi' : 'Chưa cập nhật'),
-            _buildDetailRow('Cân nặng:', _currentPet!.weight != null ? '${_currentPet!.weight!.toStringAsFixed(2)} kg' : 'Chưa cập nhật'),
-            const SizedBox(height: 20),
-            const Text('Thông tin chủ nuôi', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            const Divider(),
-            _buildDetailRow('Họ tên:', ownerName),
-            _buildDetailRow('SĐT:', ownerPhone),
-            _buildDetailRow('Email:', ownerEmail),
-            _buildDetailRow('Địa chỉ:', ownerAddress),
+            Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.only(bottom: 20.0),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Center(
+                      child: Text(
+                        'Thông tin thú cưng',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const Divider(),
+                    _buildDetailRow('Tên:', _currentPet!.petName),
+                    _buildDetailRow('Loài:', speciesName),
+                    _buildDetailRow('Giống:', breedName),
+                    _buildDetailRow('Giới tính:', _currentPet!.gender ?? 'Chưa cập nhật'),
+                    _buildDetailRow('Tuổi:', _currentPet!.age != null ? '${_currentPet!.age} tuổi' : 'Chưa cập nhật'),
+                    _buildDetailRow('Cân nặng:', _currentPet!.weight != null ? '${_currentPet!.weight!.toStringAsFixed(2)} kg' : 'Chưa cập nhật'),
+                    const SizedBox(height: 20),
+                    const Center(
+                      child: Text(
+                        'Thông tin chủ nuôi',
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const Divider(),
+                    _buildDetailRow('Họ tên:', ownerName),
+                    _buildDetailRow('SĐT:', ownerPhone),
+                    _buildDetailRow('Email:', ownerEmail),
+                    _buildDetailRow('Địa chỉ:', ownerAddress),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

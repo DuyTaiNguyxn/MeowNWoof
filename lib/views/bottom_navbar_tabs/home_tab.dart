@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/pet.dart';
 import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
-import 'package:meow_n_woof/views/medical_record/select_pet_page.dart';
 import 'package:meow_n_woof/views/medicine/medicine_list.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 import 'package:provider/provider.dart';
 
 class HomeTab extends StatefulWidget {
@@ -23,8 +23,6 @@ class _HomeTabState extends State<HomeTab> {
   final TextEditingController _searchController = TextEditingController();
   String selectedFilter = 'Tên thú cưng';
 
-  final PetService _petService = PetService();
-
   bool _isLoadingPets = true;
   String? _errorMessage;
 
@@ -32,7 +30,9 @@ class _HomeTabState extends State<HomeTab> {
   void initState() {
     super.initState();
     _searchController.addListener(_onSearch);
-    _loadPets();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadPets();
+    });
   }
 
   Future<void> _loadPets() async {
@@ -41,16 +41,11 @@ class _HomeTabState extends State<HomeTab> {
       _errorMessage = null;
     });
     try {
-      final pets = await _petService.getPets();
+      final petService = context.read<PetService>();
+      final pets = await petService.getPets();
       if (mounted) {
         setState(() {
           _allPets = pets;
-          _allPets.sort((a, b) {
-            if (a.createdAt == null && b.createdAt == null) return 0;
-            if (a.createdAt == null) return 1;
-            if (b.createdAt == null) return -1;
-            return b.createdAt!.compareTo(a.createdAt!); // Sắp xếp giảm dần
-          });
           _filteredPets = List.from(_allPets);
           _isLoadingPets = false;
         });
@@ -126,13 +121,15 @@ class _HomeTabState extends State<HomeTab> {
   void _navigateToCreateMedicalRecord() async {
     final Pet? selectedPet = await Navigator.push<Pet?>(
       context,
-      MaterialPageRoute(
-        builder: (_) => SelectPetPage(
-          selectedPet: null,
-          onPetSelected: (pet) {
-            Navigator.pop(context, pet);
-          },
-        ),
+      MaterialPageRoute<Pet?>(
+        builder: (BuildContext context) {
+          return PetSelectionWidget(
+            selectedPet: null,
+            onPetSelected: (pet) {
+              Navigator.pop(context, pet);
+            },
+          );
+        },
       ),
     );
 
@@ -156,7 +153,7 @@ class _HomeTabState extends State<HomeTab> {
       final selectedPet = await Navigator.push<Pet>(
         context,
         MaterialPageRoute(
-          builder: (_) => SelectPetPage(
+          builder: (_) => PetSelectionWidget(
             selectedPet: null,
             onPetSelected: (pet) {
               Navigator.pop(context, pet);
