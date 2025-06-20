@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/views/medicine/medicine_detail.dart';
+import 'package:meow_n_woof/models/medicine.dart'; // Import model Medicine
+import 'package:meow_n_woof/services/medicine_service.dart'; // Import MedicineService
+import 'package:meow_n_woof/views/medicine/medicine_detail.dart'; // Đảm bảo đường dẫn này đúng
 
 class MedicineListPage extends StatefulWidget {
   const MedicineListPage({super.key});
@@ -12,74 +14,66 @@ class _MedicineListPageState extends State<MedicineListPage> {
   final TextEditingController _searchController = TextEditingController();
   String selectedFilter = 'Tên thuốc';
 
-  final List<Map<String, String>> allMedicines = [
-    {
-      'name': 'Paravet',
-      'type': 'Kháng sinh',
-      'expiryDate': '30/12/2025',
-      'image': '',
-    },
-    {
-      'name': 'Fipronil Spray',
-      'type': 'Trị ve rận',
-      'expiryDate': '15/08/2024',
-      'image': '',
-    },
-    {
-      'name': 'Vaccine ABC',
-      'type': 'Vaccine',
-      'expiryDate': '01/01/2026',
-      'image': '',
-    },
-  ];
+  // Thay thế allMedicines tĩnh bằng một Future để lấy dữ liệu từ service
+  late Future<List<Medicine>> _medicinesFuture;
+  List<Medicine> _allMedicines = []; // Lưu trữ tất cả thuốc đã tải về
+  List<Medicine> _filteredMedicines = []; // Danh sách thuốc đã lọc
 
-  List<Map<String, String>> filteredMedicines = [];
+  final MedicineService _medicineService = MedicineService(); // Khởi tạo service
 
   @override
   void initState() {
     super.initState();
-    filteredMedicines = List.from(allMedicines);
+    _fetchMedicines(); // Gọi hàm để tải thuốc khi khởi tạo widget
+  }
+
+  // Hàm tải dữ liệu thuốc từ API
+  Future<void> _fetchMedicines() async {
+    setState(() {
+      _medicinesFuture = _medicineService.fetchAllMedicines();
+    });
+    try {
+      _allMedicines = await _medicinesFuture;
+      _filterMedicines(_searchController.text); // Áp dụng bộ lọc ban đầu sau khi tải
+    } catch (e) {
+      // Xử lý lỗi khi tải dữ liệu (ví dụ: hiển thị thông báo lỗi)
+      print('Failed to load medicines: $e');
+      setState(() {
+        _allMedicines = []; // Đảm bảo danh sách rỗng nếu có lỗi
+        _filteredMedicines = [];
+      });
+    }
   }
 
   void _filterMedicines(String keyword) {
     final lowerKeyword = keyword.toLowerCase();
 
-    final result = allMedicines.where((med) {
+    final result = _allMedicines.where((med) {
       switch (selectedFilter) {
         case 'Tên thuốc':
-          return med['name']!.toLowerCase().contains(lowerKeyword);
+          return med.medicineName.toLowerCase().contains(lowerKeyword);
         case 'Loại':
-          return med['type']!.toLowerCase().contains(lowerKeyword);
+        // Cần kiểm tra type.typeName nếu type là đối tượng MedicineType
+          return med.type?.typeName.toLowerCase().contains(lowerKeyword) ?? false;
         case 'Hạn sử dụng':
-          return med['expiryDate']!.toLowerCase().contains(lowerKeyword);
+        // Chuyển đổi DateTime sang chuỗi để so sánh
+          return med.expiryDate.toLocal().toString().split(' ')[0].contains(lowerKeyword);
         default:
           return false;
       }
     }).toList();
 
     setState(() {
-      filteredMedicines = result;
+      _filteredMedicines = result;
     });
   }
 
-  bool _isExpired(String? dateStr) {
-    if (dateStr == null || dateStr.isEmpty) return false;
-
-    try {
-      final parts = dateStr.split('/');
-      if (parts.length != 3) return false;
-
-      final day = int.parse(parts[0]);
-      final month = int.parse(parts[1]);
-      final year = int.parse(parts[2]);
-
-      final expiryDate = DateTime(year, month, day);
-      final now = DateTime.now();
-
-      return expiryDate.isBefore(now);
-    } catch (e) {
-      return false;
-    }
+  // Hàm kiểm tra thuốc hết hạn
+  bool _isExpired(DateTime expiryDate) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final expirationDay = DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
+    return expirationDay.isBefore(today);
   }
 
   @override
@@ -139,77 +133,99 @@ class _MedicineListPageState extends State<MedicineListPage> {
             ),
           ),
           Expanded(
-            child: filteredMedicines.isEmpty
-                ? const Center(child: Text('Không tìm thấy thuốc nào.'))
-                : ListView.builder(
-              itemCount: filteredMedicines.length,
-              itemBuilder: (context, index) {
-                final med = filteredMedicines[index];
-                final imageWidget = (med['image'] != null && med['image']!.isNotEmpty)
-                    ? Image.network(med['image']!, fit: BoxFit.cover)
-                    : Image.asset('assets/images/logo_bg.png', fit: BoxFit.cover);
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: SizedBox(
-                        width: 60,
-                        height: 60,
-                        child: imageWidget,
-                      ),
-                    ),
-                    title: Text(
-                      med['name'] ?? '',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            child: FutureBuilder<List<Medicine>>(
+              future: _medicinesFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const SizedBox(height: 6),
-                        Text('Loại: ${med['type']}'),
-                        const SizedBox(height: 6),
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(color: Colors.black),
-                            children: [
-                              const TextSpan(text: 'Hạn sử dụng: '),
-                              TextSpan(
-                                text: med['expiryDate'],
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _isExpired(med['expiryDate']) ? Colors.red : Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
+                        Text('Lỗi khi tải dữ liệu: ${snapshot.error}'),
+                        ElevatedButton(
+                          onPressed: _fetchMedicines,
+                          child: const Text('Thử lại'),
                         ),
                       ],
                     ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MedicineDetailPage(
-                            name: 'Paravet',
-                            description: 'Thuốc trị nhiễm khuẩn hiệu quả cho chó mèo.',
-                            type: 'Kháng sinh',
-                            unit: 'Viên',
-                            speciesUse: 'Chó, Mèo',
-                            stockQuantity: 50,
-                            receiptDate: DateTime(2023, 12, 10),
-                            expiryDate: DateTime(2024, 12, 30),
-                            manufacturer: 'Vemedim',
-                            price: 25000,
-                            imageUrl: '',
+                  );
+                } else if (!snapshot.hasData || _filteredMedicines.isEmpty) {
+                  return const Center(child: Text('Không tìm thấy thuốc nào.'));
+                } else {
+                  return ListView.builder(
+                    itemCount: _filteredMedicines.length,
+                    itemBuilder: (context, index) {
+                      final med = _filteredMedicines[index];
+                      final String? imageUrl = med.imageURL;
+                      final Widget imageWidget = (imageUrl != null && imageUrl.isNotEmpty)
+                          ? Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/logo_bg.png', fit: BoxFit.cover),
+                            )
+                          : Image.asset('assets/images/logo_bg.png', fit: BoxFit.cover);
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: ListTile(
+                          leading: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: imageWidget,
+                            ),
                           ),
+                          title: Text(
+                            med.medicineName,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 6),
+                              Text(
+                                med.type?.typeName ?? 'Chưa cập nhật',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[800],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              RichText(
+                                text: TextSpan(
+                                  style: const TextStyle(color: Colors.black),
+                                  children: [
+                                    const TextSpan(text: 'Hạn sử dụng: '),
+                                    TextSpan(
+                                      text: med.expiryDate.toLocal().toString().split(' ')[0],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: _isExpired(med.expiryDate) ? Colors.red : Colors.teal[800],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                            ],
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MedicineDetailPage(medicine: med),
+                              ),
+                            );
+                          },
                         ),
                       );
                     },
-                  ),
-                );
+                  );
+                }
               },
             ),
           ),

@@ -19,7 +19,7 @@ class MedicalRecordService {
     }
     return {
       'Content-Type': 'application/json; charset=UTF-8',
-      'Authorization': 'Bearer $token', // Thêm token vào header
+      'Authorization': 'Bearer $token',
     };
   }
 

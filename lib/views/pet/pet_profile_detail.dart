@@ -90,7 +90,15 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
     final speciesName = _currentPet?.species?.speciesName ?? 'Chưa cập nhật';
     final breedName = _currentPet?.breed?.breedName ?? 'Chưa cập nhật';
 
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
+    if (_currentPet == null) {
+      return const Center(child: Text('Không thể tải thông tin thú cưng. Vui lòng thử lại.'));
+    }
+
+    // Nội dung chính
     return Scaffold(
       appBar: AppBar(
         title: Text('Chi tiết thú cưng - ${_currentPet?.petName ?? widget.petName}'),
@@ -102,11 +110,7 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
           },
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _currentPet == null
-          ? const Center(child: Text('Không thể tải thông tin thú cưng. Vui lòng thử lại.'))
-          : SingleChildScrollView(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [

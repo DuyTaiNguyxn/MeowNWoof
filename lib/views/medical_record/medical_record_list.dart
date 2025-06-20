@@ -27,8 +27,7 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   bool _isLoading = true;
   String? _errorMessage;
 
-  // Lấy instance của service một lần khi cần thiết, tránh gọi trong build
-  late MedicalRecordService recordService; // Khai báo late
+  late MedicalRecordService recordService;
 
   @override
   void initState() {

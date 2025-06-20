@@ -318,7 +318,7 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
                       _hasDataChanged = true;
                     }
                   },
-                  icon: const Icon(Icons.note_alt_outlined, color: Colors.white),
+                  icon: const Icon(Icons.edit_note, color: Colors.white),
                   label: const Text('Chỉnh sửa', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 6, 25, 81),
