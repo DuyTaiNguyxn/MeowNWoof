@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'dart:io';
 import 'package:meow_n_woof/models/pet.dart';
 import 'package:meow_n_woof/models/species.dart';
@@ -82,22 +81,6 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
           _isLoadingDropdowns = false;
         });
       }
-    } on SocketException {
-      if (mounted) {
-        setState(() {
-          _dropdownErrorMessage = 'Không có kết nối Internet.';
-          _isLoadingDropdowns = false;
-        });
-      }
-      _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
-    } on http.ClientException catch (e) {
-      if (mounted) {
-        setState(() {
-          _dropdownErrorMessage = 'Lỗi kết nối server: ${e.message}';
-          _isLoadingDropdowns = false;
-        });
-      }
-      _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -166,7 +149,7 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
     }
   }
 
-  Future<void> _savePet() async {
+  Future<void> _submitEditPet() async {
     if (_formKey.currentState!.validate()) {
       _showSnackBar('Đang lưu hồ sơ thú cưng...');
 
@@ -181,13 +164,6 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
           );
           print('Đã tải ảnh mới lên Cloudinary thành công.');
         }
-      } on SocketException {
-        _showSnackBar('Không có kết nối Internet khi tải ảnh. Vui lòng kiểm tra lại mạng của bạn.');
-        return;
-      } on http.ClientException catch (e) {
-        _showSnackBar('Lỗi kết nối server khi tải ảnh: ${e.message}');
-        print('Cloudinary upload error: $e');
-        return;
       } catch (e) {
         _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}');
         print('Cloudinary upload error: $e');
@@ -220,10 +196,6 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
           );
           Navigator.pop(context, true);
         }
-      } on SocketException {
-        _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
-      } on http.ClientException {
-        _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
       } catch (e) {
         _showSnackBar('Lỗi khi cập nhật hồ sơ: ${e.toString()}');
         print('Error updating pet: $e');
@@ -304,11 +276,10 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
                 _onSpeciesChanged,
               ),
 
-              // Dropdown cho Giống
-              if (_selectedSpeciesId != null) // Chỉ hiển thị nếu đã chọn loài
+              if (_selectedSpeciesId != null)
                 _isLoadingDropdowns
                     ? const Center(child: CircularProgressIndicator())
-                    : _dropdownErrorMessage != null && _availableBreeds.isEmpty // Hiển thị lỗi nếu không tải được giống
+                    : _dropdownErrorMessage != null && _availableBreeds.isEmpty
                     ? Text('Lỗi tải giống: $_dropdownErrorMessage', style: const TextStyle(color: Colors.red))
                     : _buildDropdownField<int>(
                   'Giống',
@@ -326,7 +297,16 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: _savePet,
+            onPressed: () async {
+              if (!_hasPetChange()) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Không có thông tin nào thay đổi.')),
+                );
+                return;
+              }
+              await _submitEditPet();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.lightBlue,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -340,6 +320,25 @@ class _EditPetProfilePageState extends State<EditPetProfilePage> {
         ),
       ),
     );
+  }
+
+  bool _hasPetChange() {
+    final pet = widget.pet;
+
+    if (_selectedImage != null) {
+      return true;
+    }
+
+    if (petNameController.text != pet.petName) return true;
+    if (ageController.text != (pet.age?.toString() ?? '')) return true;
+    if (weightController.text != (pet.weight?.toStringAsFixed(2) ?? '')) return true;
+
+    if (gender != pet.gender) return true;
+
+    if (_selectedSpeciesId != pet.species?.speciesId) return true;
+    if (_selectedBreedId != pet.breed?.breedId) return true;
+
+    return false;
   }
 
   Widget _buildTextField(String label, TextEditingController controller,

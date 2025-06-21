@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:meow_n_woof/views/appointment/edit_appointment.dart';
 import 'package:provider/provider.dart';
 import 'package:meow_n_woof/models/appointment.dart';
 import 'package:meow_n_woof/services/appointment_service.dart';
@@ -28,6 +29,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     super.initState();
     _currentAppointment = widget.appointment;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _appointmentService = Provider.of<AppointmentService>(context, listen: false);
       _loadAppointmentData();
     });
   }
@@ -304,10 +306,17 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Chức năng chỉnh sửa lịch khám chưa được triển khai.')),
+                      onPressed: _isLoading || _currentAppointment == null ? null : () async {
+                        final bool? hasUpdated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditAppointmentScreen(appointment: widget.appointment),
+                          ),
                         );
+                        if (hasUpdated == true) {
+                          await _loadAppointmentData();
+                          _hasDataChanged = true;
+                        }
                       },
                       icon: const Icon(Icons.edit_note, color: Colors.white),
                       label: const Text('Chỉnh sửa', style: TextStyle(color: Colors.white)),

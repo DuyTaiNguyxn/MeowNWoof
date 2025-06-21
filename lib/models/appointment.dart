@@ -5,7 +5,7 @@ class Appointment {
   final int? id;
   final int petId;
   final DateTime appointmentDatetime;
-  final int healthcareStaffId;
+  final int employeeId;
   final int veterinarianId;
   final String status;
   final DateTime? createdAt;
@@ -17,7 +17,7 @@ class Appointment {
     this.id,
     required this.petId,
     required this.appointmentDatetime,
-    required this.healthcareStaffId,
+    required this.employeeId,
     required this.veterinarianId,
     required this.status,
     this.createdAt,
@@ -30,7 +30,7 @@ class Appointment {
     int? id,
     int? petId,
     DateTime? appointmentDatetime,
-    int? healthcareStaffId,
+    int? employeeId,
     int? veterinarianId,
     String? status,
     DateTime? createdAt,
@@ -42,7 +42,7 @@ class Appointment {
       id: id ?? this.id,
       petId: petId ?? this.petId,
       appointmentDatetime: appointmentDatetime ?? this.appointmentDatetime,
-      healthcareStaffId: healthcareStaffId ?? this.healthcareStaffId,
+      employeeId: employeeId ?? this.employeeId,
       veterinarianId: veterinarianId ?? this.veterinarianId,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
@@ -57,7 +57,7 @@ class Appointment {
       id: json['appointment_id'] != null ? int.tryParse(json['appointment_id'].toString()) : null,
       petId: json['pet_id'] as int,
       appointmentDatetime: DateTime.parse(json['appointment_datetime'].toString()),
-      healthcareStaffId: json['healthcare_staff_id'] as int,
+      employeeId: json['employee_id'] as int,
       veterinarianId: json['veterinarian_id'] as int,
       status: json['status'].toString(),
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'].toString()) : null,
@@ -77,7 +77,7 @@ class Appointment {
     return {
       'pet_id': petId,
       'appointment_datetime': appointmentDatetime.toIso8601String(),
-      'healthcare_staff_id': healthcareStaffId,
+      'employee_id': employeeId,
       'veterinarian_id': veterinarianId,
       'status': status,
     };

@@ -44,7 +44,11 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
     _treatmentMethodController = TextEditingController(text: widget.medicalRecord.treatmentMethod);
     _veterinarianNoteController = TextEditingController(text: widget.medicalRecord.veterinarianNote);
 
-    _recordDate = widget.medicalRecord.recordDate.toLocal();
+    _recordDate = DateTime(
+      widget.medicalRecord.recordDate.toLocal().year,
+      widget.medicalRecord.recordDate.toLocal().month,
+      widget.medicalRecord.recordDate.toLocal().day,
+    );
     _selectedVeterinarian = widget.medicalRecord.veterinarian;
   }
 
@@ -92,8 +96,7 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
     }
   }
 
-  // Hàm gửi dữ liệu cập nhật đến backend
-  Future<void> _updateMedicalRecord() async {
+  Future<void> _submitEditMedicalRecord() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedVeterinarian == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -213,7 +216,16 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: _updateMedicalRecord,
+            onPressed: () async {
+              if (!_hasRecordChange()) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Không có thông tin nào thay đổi.')),
+                );
+                return;
+              }
+              await _submitEditMedicalRecord();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.lightBlue,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -227,6 +239,39 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
         ),
       ),
     );
+  }
+
+  bool _hasRecordChange() {
+    final originalRecord = widget.medicalRecord;
+
+    final DateTime originalRecordDateOnly = DateTime(
+      originalRecord.recordDate.toLocal().year,
+      originalRecord.recordDate.toLocal().month,
+      originalRecord.recordDate.toLocal().day,
+    );
+    // print('---[Edit Check] So sánh hồ sơ ---');
+    // print('original recordDate: ${originalRecord.recordDate}');
+    // print('current recordDate: $_recordDate');
+    //
+    // print('original vetId: ${originalRecord.veterinarian?.employeeId}');
+    // print('current vetId: ${_selectedVeterinarian?.employeeId}');
+    //
+    // print('original symptoms: ${originalRecord.symptoms}');
+    // print('current symptoms: ${_symptomsController.text}');
+
+    if (_recordDate != originalRecordDateOnly) return true;
+
+    if (_selectedVeterinarian?.employeeId != originalRecord.veterinarian?.employeeId) {
+      return true;
+    }
+
+    if (_symptomsController.text.trim() != (originalRecord.symptoms ?? '').trim()) return true;
+    if (_preliminaryDiagnosisController.text != originalRecord.preliminaryDiagnosis) return true;
+    if (_finalDiagnosisController.text != originalRecord.finalDiagnosis) return true;
+    if (_treatmentMethodController.text != originalRecord.treatmentMethod) return true;
+    if (_veterinarianNoteController.text != originalRecord.veterinarianNote) return true;
+
+    return false;
   }
 
   Widget _buildTextField(TextEditingController controller, String label, String? validationMessage, {int maxLines = 1, bool isRequired = true}) {

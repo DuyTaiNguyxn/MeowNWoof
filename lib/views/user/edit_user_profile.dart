@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:meow_n_woof/models/user.dart';
 import 'package:intl/intl.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
@@ -38,7 +37,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final authService = Provider.of<AuthService>(context, listen: false);
-      _userService = UserService(authService); // Truyền authService vào constructor
+      _userService = UserService(authService);
     });
     _currentAvatarURL = widget.userData.avatarURL;
     nameController = TextEditingController(text: widget.userData.fullName);
@@ -109,7 +108,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
 
     bool birthDateChanged = false;
     final DateTime oldBirthDateLocal = DateTime(
-        widget.userData.birth.year, // widget.userData.birth không null
+        widget.userData.birth.year,
         widget.userData.birth.month,
         widget.userData.birth.day);
     final DateTime newBirthDateLocal = DateTime(
@@ -131,8 +130,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
     return hasChanges;
   }
 
-
-  Future<void> _saveUser() async {
+  Future<void> _submitEditUser() async {
     if (_formKey.currentState!.validate()) {
       _showSnackBar('Đang lưu thông tin...');
 
@@ -147,13 +145,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           );
           print('Đã tải ảnh mới lên Cloudinary thành công.');
         }
-      } on SocketException {
-        _showSnackBar('Không có kết nối Internet khi tải ảnh. Vui lòng kiểm tra lại mạng của bạn.');
-        return;
-      } on http.ClientException catch (e) {
-        _showSnackBar('Lỗi kết nối server khi tải ảnh: ${e.message}');
-        print('Cloudinary upload error: $e');
-        return;
       } catch (e) {
         _showSnackBar('Lỗi khi tải ảnh lên Cloudinary: ${e.toString()}');
         print('Cloudinary upload error: $e');
@@ -179,13 +170,12 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã lưu thông tin thành công')),
+          const SnackBar(
+            content: Text('Đã lưu thông tin thành công'),
+            backgroundColor: Colors.lightGreen,
+          ),
         );
         Navigator.pop(context, responseUser);
-      } on SocketException {
-        _showSnackBar('Không có kết nối Internet. Vui lòng kiểm tra lại mạng của bạn.');
-      } on http.ClientException {
-        _showSnackBar('Không thể kết nối đến server. Vui lòng thử lại sau.');
       } catch (e) {
         _showSnackBar('Lỗi khi cập nhật thông tin: ${e.toString()}');
         print('Error updating user(profile): $e');
@@ -271,7 +261,7 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
                 );
                 return;
               }
-              await _saveUser();
+              await _submitEditUser();
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.lightBlue,

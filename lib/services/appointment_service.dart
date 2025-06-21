@@ -30,8 +30,8 @@ class AppointmentService {
         headers: headers,
       );
 
-      print('[AppointmentService] getAllAppointments Status: ${response.statusCode}');
-      print('[AppointmentService] getAllAppointments Body: ${response.body}');
+      // print('[AppointmentService] getAllAppointments Status: ${response.statusCode}');
+      // print('[AppointmentService] getAllAppointments Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
@@ -84,8 +84,8 @@ class AppointmentService {
         body: requestBody,
       );
 
-      print('[AppointmentService] createAppointment Status: ${response.statusCode}');
-      print('[AppointmentService] createAppointment Body: ${response.body}');
+      // print('[AppointmentService] createAppointment Status: ${response.statusCode}');
+      // print('[AppointmentService] createAppointment Body: ${response.body}');
 
       if (response.statusCode == 201) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
@@ -139,14 +139,15 @@ class AppointmentService {
       final headers = await _getHeadersWithAuth();
       final requestBody = json.encode({'status': newStatus});
 
+      print('[AppointmentService] requestBody: $requestBody');
       final response = await http.put(
-        Uri.parse('$_baseUrl/$id/status'),
+        Uri.parse('$_baseUrl/status/$id'),
         headers: headers,
         body: requestBody,
       );
 
-      print('[AppointmentService] updateAppointmentStatus Status: ${response.statusCode}');
-      print('[AppointmentService] updateAppointmentStatus Body: ${response.body}');
+      // print('[AppointmentService] updateAppointmentStatus Status: ${response.statusCode}');
+      // print('[AppointmentService] updateAppointmentStatus Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);

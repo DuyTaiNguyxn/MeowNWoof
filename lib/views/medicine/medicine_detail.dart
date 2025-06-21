@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/medicine.dart';
+import 'package:intl/intl.dart';
 
 class MedicineDetailPage extends StatelessWidget {
   final Medicine medicine;
@@ -9,11 +10,16 @@ class MedicineDetailPage extends StatelessWidget {
     required this.medicine,
   });
 
-  bool _isExpired(DateTime expiryDate) {
+  bool _isExpired(DateTime? expiryDate) {
+    if (expiryDate == null) return false;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final expirationDay = DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
     return expirationDay.isBefore(today);
+  }
+
+  String formatDate(DateTime? date) {
+    return date != null ? DateFormat('dd/MM/yyyy').format(date.toLocal()) : 'Chưa rõ';
   }
 
   @override
@@ -50,12 +56,17 @@ class MedicineDetailPage extends StatelessWidget {
                     _buildDetailRow('Mô tả:', medicine.description ?? 'Không có'),
                     _buildTypeRow('Loại:', medicine.type?.typeName ?? 'Chưa cập nhật'),
                     _buildDetailRow('Đơn vị:', medicine.unit?.unitName ?? 'Chưa cập nhật'),
-                    _buildDetailRow('Dùng cho:', medicine.speciesUse),
-                    _buildDetailRow('Số lượng còn:', medicine.stockQuantity.toString()),
-                    _buildDetailRow('Ngày nhập:', medicine.receiptDate.toLocal().toString().split(' ')[0]),
+                    _buildDetailRow('Dùng cho:', medicine.speciesUse ?? 'Chưa cập nhật'),
+                    _buildDetailRow('Số lượng còn:', medicine.stockQuantity?.toString() ?? 'Chưa rõ'),
+                    _buildDetailRow('Ngày nhập:', formatDate(medicine.receiptDate)),
                     _buildExpiryDateRow('Ngày hết hạn:', medicine.expiryDate),
-                    _buildDetailRow('Nhà sản xuất:', medicine.manufacturer),
-                    _buildDetailRow('Giá:', medicine.price != null ? '${medicine.price!.toStringAsFixed(0)} VNĐ' : 'Chưa cập nhật'),
+                    _buildDetailRow('Nhà sản xuất:', medicine.manufacturer ?? 'Chưa cập nhật'),
+                    _buildDetailRow(
+                      'Giá:',
+                      medicine.price != null
+                          ? '${medicine.price!.toStringAsFixed(0)} VNĐ'
+                          : 'Chưa cập nhật',
+                    ),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -95,9 +106,7 @@ class MedicineDetailPage extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontSize: 16),
             ),
           ),
         ],
@@ -127,7 +136,7 @@ class MedicineDetailPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.blue[800],
-                fontWeight:FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -136,9 +145,10 @@ class MedicineDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildExpiryDateRow(String label, DateTime expiryDate) {
+  Widget _buildExpiryDateRow(String label, DateTime? expiryDate) {
     final isExpired = _isExpired(expiryDate);
-    final String dateString = expiryDate.toLocal().toString().split(' ')[0];
+    final dateString = formatDate(expiryDate);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
@@ -160,7 +170,7 @@ class MedicineDetailPage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 color: isExpired ? Colors.red : Colors.green[600],
-                fontWeight:FontWeight.bold,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),

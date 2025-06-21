@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -193,88 +192,70 @@ class _AppointmentTabState extends State<AppointmentTab> {
               itemBuilder: (context, index) {
                 final appointment = filteredAppointments[index];
 
-                return Slidable(
-                  key: ValueKey(appointment.id ?? UniqueKey().toString()),
-                  endActionPane: ActionPane(
-                    motion: const ScrollMotion(),
-                    extentRatio: 0.25,
-                    children: [
-                      SlidableAction(
-                        onPressed: (context) {
-                          _confirmCancelAppointment(context, appointment);
-                        },
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        icon: Icons.delete,
-                        label: 'Huỷ',
+                return GestureDetector(
+                  onTap: () => _handleAppointmentClick(appointment),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                  ),
-                  child: GestureDetector(
-                    onTap: () => _handleAppointmentClick(appointment),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(color: Colors.black),
-                                  children: [
-                                    const TextSpan(text: '🐾 Tên thú cưng: '),
-                                    TextSpan(
-                                      text: appointment.pet?.petName ?? 'N/A',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
+                      elevation: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '🐾 Tên thú cưng: '),
+                                  TextSpan(
+                                    text: appointment.pet?.petName ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(color: Colors.black),
-                                  children: [
-                                    const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
-                                    TextSpan(
-                                      text: appointment.veterinarian?.fullName ?? 'N/A',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blueAccent,
-                                      ),
+                            ),
+                            const SizedBox(height: 12),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
+                                  TextSpan(
+                                    text: appointment.veterinarian?.fullName ?? 'N/A',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blueAccent,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(color: Colors.black),
-                                  children: [
-                                    const TextSpan(text: '📅 Ngày - Giờ: '),
-                                    TextSpan(
-                                      text: DateFormat('dd/MM/yyyy - HH:mm').format(appointment.appointmentDatetime.toLocal()),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                            ),
+                            const SizedBox(height: 12),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '📅 Ngày - Giờ: '),
+                                  TextSpan(
+                                    text: DateFormat('dd/MM/yyyy - HH:mm').format(appointment.appointmentDatetime.toLocal()),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              _buildStatusRow(appointment.status),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 12),
+                            _buildStatusRow(appointment.status),
+                          ],
                         ),
                       ),
                     ),
@@ -287,15 +268,13 @@ class _AppointmentTabState extends State<AppointmentTab> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Khi nhấn nút Thêm, điều hướng đến CreateAppointmentScreen
-          // và chờ kết quả trả về. Nếu có kết quả (lịch hẹn mới tạo), thì làm mới danh sách.
-          // final result = await Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const CreateAppointmentScreen()),
-          // );
-          // if (result == true) { // Giả sử CreateAppointmentScreen trả về true nếu thành công
-          //   _fetchAppointments(); // Tải lại danh sách lịch hẹn
-          // }
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateAppointmentScreen()),
+          );
+          if (result == true) {
+            _fetchAppointments();
+          }
         },
         backgroundColor: Colors.lightBlue,
         foregroundColor: Colors.white,
@@ -346,66 +325,5 @@ class _AppointmentTabState extends State<AppointmentTab> {
         ],
       ),
     );
-  }
-
-  void _confirmCancelAppointment(BuildContext context, Appointment appointmentToCancel) async {
-    final shouldCancel = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Xác nhận huỷ?'),
-          content: Text('Bạn có chắc muốn huỷ lịch khám của ${appointmentToCancel.pet?.petName ?? 'thú cưng này'} không?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: const Text(
-                'Không',
-                style: TextStyle(color: Colors.black),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: const Text(
-                'Có',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (!mounted) return;
-
-    if (shouldCancel == true) {
-      try {
-        if (appointmentToCancel.id == null) {
-          throw Exception('Không thể huỷ lịch hẹn vì không có ID.');
-        }
-
-        await _appointmentService.updateAppointmentStatus(appointmentToCancel.id!, 'cancelled');
-
-        setState(() {
-          final int apptIndexInAll = allAppointments.indexWhere((appt) => appt.id == appointmentToCancel.id);
-          if (apptIndexInAll != -1) {
-            allAppointments[apptIndexInAll] = appointmentToCancel.copyWith(status: 'cancelled');
-          }
-          _filterAppointments(_searchController.text);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã huỷ lịch khám của ${appointmentToCancel.pet?.petName ?? 'thú cưng'} thành công!')),
-        );
-      } catch (e) {
-        print('Error canceling appointment: $e');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể huỷ lịch khám: $e')),
-        );
-      }
-    }
   }
 }

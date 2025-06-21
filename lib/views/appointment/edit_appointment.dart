@@ -9,20 +9,22 @@ import 'package:meow_n_woof/services/appointment_service.dart';
 import 'package:meow_n_woof/widgets/veterinarian_selection_widget.dart';
 import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 
-class CreateAppointmentScreen extends StatefulWidget {
-  const CreateAppointmentScreen({super.key});
+class EditAppointmentScreen extends StatefulWidget {
+  final Appointment appointment;
+
+  const EditAppointmentScreen({super.key, required this.appointment});
 
   @override
-  State<CreateAppointmentScreen> createState() => _CreateAppointmentScreenState();
+  State<EditAppointmentScreen> createState() => _EditAppointmentScreenState();
 }
 
-class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
+class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
   final _formKey = GlobalKey<FormState>();
 
   Pet? _selectedPet;
   User? _selectedVeterinarian;
-  DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay.now();
+  late DateTime _selectedDate;
+  late TimeOfDay _selectedTime;
 
   bool _isLoading = false;
 
@@ -32,10 +34,10 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedTime = TimeOfDay(
-      hour: _selectedTime.hour,
-      minute: _selectedTime.minute < 30 ? 0 : 30,
-    );
+    _selectedPet = widget.appointment.pet;
+    _selectedVeterinarian = widget.appointment.veterinarian;
+    _selectedDate = widget.appointment.appointmentDatetime.toLocal();
+    _selectedTime = TimeOfDay.fromDateTime(widget.appointment.appointmentDatetime.toLocal());
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _appointmentService = Provider.of<AppointmentService>(context, listen: false);
@@ -109,7 +111,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
     }
   }
 
-  Future<void> _submitAppointment() async {
+  Future<void> _submitEditAppointment() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedPet == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -133,9 +135,8 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         if (currentUser == null || currentUser.employeeId == null) {
           throw Exception('Không thể xác định người dùng hiện tại.');
         }
-        final currentEmployeeId = currentUser.employeeId!;
 
-        final DateTime appointmentDateTime = DateTime(
+        final DateTime updatedAppointmentDateTime = DateTime(
           _selectedDate.year,
           _selectedDate.month,
           _selectedDate.day,
@@ -143,26 +144,30 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
           _selectedTime.minute,
         );
 
-        final newAppointment = Appointment(
+        final updatedAppointment = Appointment(
+          id: widget.appointment.id,
           petId: _selectedPet!.petId!,
           veterinarianId: _selectedVeterinarian!.employeeId!,
-          appointmentDatetime: appointmentDateTime,
-          status: 'confirmed',
-          employeeId: currentEmployeeId,
+          appointmentDatetime: updatedAppointmentDateTime,
+          status: widget.appointment.status,
+          employeeId: currentUser.employeeId!,
         );
 
-        await _appointmentService.createAppointment(newAppointment);
+        await _appointmentService.updateAppointment(widget.appointment.id!, updatedAppointment);
 
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tạo lịch hẹn thành công!')),
+          const SnackBar(
+            content: Text('Cập nhật lịch hẹn thành công!'),
+            backgroundColor: Colors.lightGreen,
+          ),
         );
         Navigator.pop(context, true);
       } catch (e) {
-        print('[Create Appointment] Lỗi tạo lịch hẹn: ${e.toString()}');
+        print('[Edit Appointment] Lỗi cập nhật lịch hẹn: ${e.toString()}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tạo lịch hẹn: ${e.toString()}')),
+          SnackBar(content: Text('Lỗi cập nhật lịch hẹn: ${e.toString()}')),
         );
       } finally {
         setState(() {
@@ -176,7 +181,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo Lịch hẹn khám'),
+        title: const Text('Chỉnh sửa Lịch hẹn khám'),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: _isLoading
@@ -252,9 +257,6 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
                 onTap: () => _selectTime(context),
               ),
               const SizedBox(height: 20),
-
-              // Bạn có thể thêm các trường khác nếu cần, ví dụ: lý do khám
-              // _buildTextField(_reasonController, 'Lý do khám (tùy chọn)', null, maxLines: 3, isRequired: false),
             ],
           ),
         ),
@@ -263,14 +265,22 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
-            onPressed: _submitAppointment,
-            icon: const Icon(Icons.add, color: Colors.white),
+            onPressed: () async {
+              if (!_hasAppointmentChange()) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Không có thông tin nào thay đổi.')),
+                );
+                return;
+              }
+              await _submitEditAppointment();
+            },
             label: const Text(
-              'Tạo lịch hẹn',
+              'Lưu thay đổi',
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.lightBlue,
+              backgroundColor: Colors.blue,
               padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
@@ -278,5 +288,29 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         ),
       ),
     );
+  }
+
+  bool _hasAppointmentChange() {
+    final originalAppointment = widget.appointment;
+
+    if (_selectedPet?.petId != originalAppointment.petId) {
+      return true;
+    }
+    if (_selectedVeterinarian?.employeeId != originalAppointment.veterinarianId) {
+      return true;
+    }
+    final originalAppointmentDateTime = originalAppointment.appointmentDatetime.toLocal();
+    final currentSelectedDateTime = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      _selectedTime.hour,
+      _selectedTime.minute,
+    );
+    if (currentSelectedDateTime != originalAppointmentDateTime) {
+      return true;
+    }
+
+    return false;
   }
 }

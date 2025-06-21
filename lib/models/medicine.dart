@@ -5,13 +5,13 @@ class Medicine {
   final int medicineId;
   final String medicineName;
   final String? description;
-  final int typeId;
-  final int unitId;
-  final String speciesUse;
+  final int? typeId;
+  final int? unitId;
+  final String? speciesUse;
   final int? stockQuantity;
-  final DateTime receiptDate;
-  final DateTime expiryDate;
-  final String manufacturer;
+  final DateTime? receiptDate;
+  final DateTime? expiryDate;
+  final String? manufacturer;
   final double? price;
   final String? imageURL;
   final DateTime? createdAt;
@@ -23,13 +23,13 @@ class Medicine {
     required this.medicineId,
     required this.medicineName,
     this.description,
-    required this.typeId,
-    required this.unitId,
-    required this.speciesUse,
+    this.typeId,
+    this.unitId,
+    this.speciesUse,
     this.stockQuantity,
-    required this.receiptDate,
-    required this.expiryDate,
-    required this.manufacturer,
+    this.receiptDate,
+    this.expiryDate,
+    this.manufacturer,
     this.price,
     this.imageURL,
     this.createdAt,
@@ -41,19 +41,19 @@ class Medicine {
   factory Medicine.fromJson(Map<String, dynamic> json) {
     return Medicine(
       medicineId: json['medicine_id'],
-      medicineName: json['medicine_name'],
+      medicineName: json['medicine_name'] ?? '',
       description: json['description']?.toString(),
-      typeId: json['type_id'],
-      unitId: json['unit_id'],
-      speciesUse: json['species_use'],
-      stockQuantity: json['stock_quantity'],
-      receiptDate: DateTime.tryParse(json['receipt_date'].toString()) ?? DateTime.now(),
-      expiryDate: DateTime.tryParse(json['expiry_date'].toString()) ?? DateTime.now(),
-      manufacturer: json['manufacturer'],
+      typeId: json['type_id'] is int ? json['type_id'] : int.tryParse(json['type_id']?.toString() ?? ''),
+      unitId: json['unit_id'] is int ? json['unit_id'] : int.tryParse(json['unit_id']?.toString() ?? ''),
+      speciesUse: json['species_use']?.toString(),
+      stockQuantity: json['stock_quantity'] is int ? json['stock_quantity'] : int.tryParse(json['stock_quantity']?.toString() ?? ''),
+      receiptDate: json['receipt_date'] != null ? DateTime.tryParse(json['receipt_date'].toString()) : null,
+      expiryDate: json['expiry_date'] != null ? DateTime.tryParse(json['expiry_date'].toString()) : null,
+      manufacturer: json['manufacturer']?.toString(),
       price: json['price'] != null ? double.tryParse(json['price'].toString()) : null,
       imageURL: json['imageURL']?.toString(),
-      createdAt: DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now(),
-      updatedAt: DateTime.tryParse(json['updated_at'].toString()) ?? DateTime.now(),
+      createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+      updatedAt: json['updated_at'] != null ? DateTime.tryParse(json['updated_at'].toString()) : null,
       type: json['type'] != null ? MedicineType.fromJson(json['type']) : null,
       unit: json['unit'] != null ? MedicineUnit.fromJson(json['unit']) : null,
     );

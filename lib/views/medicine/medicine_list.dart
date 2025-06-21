@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:meow_n_woof/models/medicine.dart'; // Import model Medicine
-import 'package:meow_n_woof/services/medicine_service.dart'; // Import MedicineService
-import 'package:meow_n_woof/views/medicine/medicine_detail.dart'; // Đảm bảo đường dẫn này đúng
+import 'package:meow_n_woof/models/medicine.dart';
+import 'package:meow_n_woof/services/medicine_service.dart';
+import 'package:meow_n_woof/views/medicine/medicine_detail.dart';
+import 'package:intl/intl.dart';
 
 class MedicineListPage extends StatefulWidget {
   const MedicineListPage({super.key});
@@ -14,32 +15,29 @@ class _MedicineListPageState extends State<MedicineListPage> {
   final TextEditingController _searchController = TextEditingController();
   String selectedFilter = 'Tên thuốc';
 
-  // Thay thế allMedicines tĩnh bằng một Future để lấy dữ liệu từ service
   late Future<List<Medicine>> _medicinesFuture;
-  List<Medicine> _allMedicines = []; // Lưu trữ tất cả thuốc đã tải về
-  List<Medicine> _filteredMedicines = []; // Danh sách thuốc đã lọc
+  List<Medicine> _allMedicines = [];
+  List<Medicine> _filteredMedicines = [];
 
-  final MedicineService _medicineService = MedicineService(); // Khởi tạo service
+  final MedicineService _medicineService = MedicineService();
 
   @override
   void initState() {
     super.initState();
-    _fetchMedicines(); // Gọi hàm để tải thuốc khi khởi tạo widget
+    _fetchMedicines();
   }
 
-  // Hàm tải dữ liệu thuốc từ API
   Future<void> _fetchMedicines() async {
     setState(() {
       _medicinesFuture = _medicineService.fetchAllMedicines();
     });
     try {
       _allMedicines = await _medicinesFuture;
-      _filterMedicines(_searchController.text); // Áp dụng bộ lọc ban đầu sau khi tải
+      _filterMedicines(_searchController.text);
     } catch (e) {
-      // Xử lý lỗi khi tải dữ liệu (ví dụ: hiển thị thông báo lỗi)
       print('Failed to load medicines: $e');
       setState(() {
-        _allMedicines = []; // Đảm bảo danh sách rỗng nếu có lỗi
+        _allMedicines = [];
         _filteredMedicines = [];
       });
     }
@@ -53,11 +51,10 @@ class _MedicineListPageState extends State<MedicineListPage> {
         case 'Tên thuốc':
           return med.medicineName.toLowerCase().contains(lowerKeyword);
         case 'Loại':
-        // Cần kiểm tra type.typeName nếu type là đối tượng MedicineType
           return med.type?.typeName.toLowerCase().contains(lowerKeyword) ?? false;
         case 'Hạn sử dụng':
-        // Chuyển đổi DateTime sang chuỗi để so sánh
-          return med.expiryDate.toLocal().toString().split(' ')[0].contains(lowerKeyword);
+          final expiryStr = med.expiryDate?.toLocal().toString().split(' ')[0] ?? '';
+          return expiryStr.contains(lowerKeyword);
         default:
           return false;
       }
@@ -68,12 +65,16 @@ class _MedicineListPageState extends State<MedicineListPage> {
     });
   }
 
-  // Hàm kiểm tra thuốc hết hạn
-  bool _isExpired(DateTime expiryDate) {
+  bool _isExpired(DateTime? expiryDate) {
+    if (expiryDate == null) return false;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final expirationDay = DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
-    return expirationDay.isBefore(today);
+    final exp = DateTime(expiryDate.year, expiryDate.month, expiryDate.day);
+    return exp.isBefore(today);
+  }
+
+  String formatDate(DateTime? date) {
+    return date != null ? DateFormat('dd/MM/yyyy').format(date.toLocal()) : 'Chưa rõ';
   }
 
   @override
@@ -161,10 +162,11 @@ class _MedicineListPageState extends State<MedicineListPage> {
                       final String? imageUrl = med.imageURL;
                       final Widget imageWidget = (imageUrl != null && imageUrl.isNotEmpty)
                           ? Image.network(
-                              imageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => Image.asset('assets/images/logo_bg.png', fit: BoxFit.cover),
-                            )
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            Image.asset('assets/images/logo_bg.png', fit: BoxFit.cover),
+                      )
                           : Image.asset('assets/images/logo_bg.png', fit: BoxFit.cover);
 
                       return Card(
@@ -173,11 +175,7 @@ class _MedicineListPageState extends State<MedicineListPage> {
                         child: ListTile(
                           leading: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: SizedBox(
-                              width: 60,
-                              height: 60,
-                              child: imageWidget,
-                            ),
+                            child: SizedBox(width: 60, height: 60, child: imageWidget),
                           ),
                           title: Text(
                             med.medicineName,
@@ -201,7 +199,7 @@ class _MedicineListPageState extends State<MedicineListPage> {
                                   children: [
                                     const TextSpan(text: 'Hạn sử dụng: '),
                                     TextSpan(
-                                      text: med.expiryDate.toLocal().toString().split(' ')[0],
+                                      text: formatDate(med.expiryDate),
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: _isExpired(med.expiryDate) ? Colors.red : Colors.teal[800],
