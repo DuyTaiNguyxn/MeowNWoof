@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:meow_n_woof/views/vaccination_schedule/create_vaccination_schedule.dart';
+import 'package:meow_n_woof/views/vaccination_schedule/vaccination_detail.dart';
 import 'package:provider/provider.dart';
 
 import 'package:meow_n_woof/models/vaccination.dart';
@@ -130,6 +132,19 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
     );
   }
 
+  void _handleVaccinationClick(Vaccination vaccination) async {
+    final bool? hasDataChanged = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => VaccinationDetailPage(vaccination: vaccination),
+      ),
+    );
+
+    if (hasDataChanged == true) {
+      _fetchVaccinations();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -193,59 +208,62 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
               itemCount: filteredVaccinations.length,
               itemBuilder: (context, index) {
                 final vaccination = filteredVaccinations[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(color: Colors.black),
-                            children: [
-                              const TextSpan(text: '🐾 Tên thú cưng: '),
-                              TextSpan(
-                                text: vaccination.pet?.petName ?? 'N/A',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(color: Colors.black),
-                            children: [
-                              const TextSpan(text: '💉 Bệnh tiêm phòng: '),
-                              TextSpan(
-                                text: vaccination.diseasePrevented,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  color: Colors.orange,
+                return GestureDetector(
+                  onTap: () => _handleVaccinationClick(vaccination),
+                  child: Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 3,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              style: const TextStyle(color: Colors.black),
+                              children: [
+                                const TextSpan(text: '🐾 Tên thú cưng: '),
+                                TextSpan(
+                                  text: vaccination.pet?.petName ?? 'N/A',
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(color: Colors.black),
-                            children: [
-                              const TextSpan(text: '📅 Ngày tiêm: '),
-                              TextSpan(
-                                text: DateFormat('dd/MM/yyyy - HH:mm').format(vaccination.vaccinationDatetime.toLocal()),
-                                style: const TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ],
+                          const SizedBox(height: 12),
+                          RichText(
+                            text: TextSpan(
+                              style: const TextStyle(color: Colors.black),
+                              children: [
+                                const TextSpan(text: '💉 Bệnh tiêm phòng: '),
+                                TextSpan(
+                                  text: vaccination.diseasePrevented,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildStatusRow(vaccination.status),
-                      ],
+                          const SizedBox(height: 12),
+                          RichText(
+                            text: TextSpan(
+                              style: const TextStyle(color: Colors.black),
+                              children: [
+                                const TextSpan(text: '📅 Ngày tiêm: '),
+                                TextSpan(
+                                  text: DateFormat('dd/MM/yyyy - HH:mm').format(vaccination.vaccinationDatetime.toLocal()),
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildStatusRow(vaccination.status),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -256,13 +274,13 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // final result = await Navigator.push(
-          //   context,
-          //   MaterialPageRoute(builder: (context) => const CreateAppointmentScreen()),
-          // );
-          // if (result == true) {
-          //   _fetchAppointments();
-          // }
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const CreateVaccinationScreen()),
+          );
+          if (result == true) {
+            _fetchVaccinations();
+          }
         },
         backgroundColor: Colors.lightBlue,
         foregroundColor: Colors.white,

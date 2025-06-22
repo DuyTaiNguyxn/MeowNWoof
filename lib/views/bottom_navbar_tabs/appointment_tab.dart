@@ -127,7 +127,6 @@ class _AppointmentTabState extends State<AppointmentTab> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

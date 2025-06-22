@@ -1,55 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:meow_n_woof/views/appointment/edit_appointment.dart';
+import 'package:meow_n_woof/views/vaccination_schedule/edit_vaccination.dart';
 import 'package:provider/provider.dart';
-import 'package:meow_n_woof/models/appointment.dart';
-import 'package:meow_n_woof/services/appointment_service.dart';
 
-class AppointmentDetailPage extends StatefulWidget {
-  final Appointment appointment;
+import 'package:meow_n_woof/models/vaccination.dart';
+import 'package:meow_n_woof/services/vaccination_service.dart';
 
-  const AppointmentDetailPage({
+class VaccinationDetailPage extends StatefulWidget {
+  final Vaccination vaccination;
+
+  const VaccinationDetailPage({
     super.key,
-    required this.appointment,
+    required this.vaccination,
   });
 
   @override
-  State<AppointmentDetailPage> createState() => _AppointmentDetailPageState();
+  State<VaccinationDetailPage> createState() => _VaccinationDetailPageState();
 }
 
-class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
-  Appointment? _currentAppointment;
+class _VaccinationDetailPageState extends State<VaccinationDetailPage> {
+  Vaccination? _currentVaccination;
   bool _isLoading = true;
   bool _hasDataChanged = false;
 
-  late AppointmentService _appointmentService;
+  late VaccinationService _vaccinationService;
 
   @override
   void initState() {
     super.initState();
-    _currentAppointment = widget.appointment;
+    _currentVaccination = widget.vaccination;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _appointmentService = Provider.of<AppointmentService>(context, listen: false);
-      _loadAppointmentData();
+      _vaccinationService = Provider.of<VaccinationService>(context, listen: false);
+      _loadVaccinationData();
     });
   }
 
-  Future<void> _loadAppointmentData() async {
+  Future<void> _loadVaccinationData() async {
     setState(() => _isLoading = true);
     try {
-      if (_currentAppointment?.id == null) {
-        throw Exception('appointment_id = null. Không thể fetch data.');
+      if (_currentVaccination?.vaccinationId == null) {
+        throw Exception('vaccination_id = null. Không thể fetch data.');
       }
 
-      final fetched = await _appointmentService.getAppointmentById(_currentAppointment!.id!);
+      final fetched = await _vaccinationService.getVaccinationById(_currentVaccination!.vaccinationId!);
 
-      if (mounted) setState(() => _currentAppointment = fetched);
+      if (mounted) setState(() => _currentVaccination = fetched);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Không thể tải chi tiết lịch khám: ${e.toString()}')),
+          SnackBar(content: Text('Không thể tải chi tiết lịch tiêm: ${e.toString()}')),
         );
-        setState(() => _currentAppointment = null);
+        setState(() => _currentVaccination = null);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -73,6 +74,23 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     );
   }
 
+  Widget _buildVaccinationDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatusRow(String value) {
     String displayText;
     Color? valueColor;
@@ -87,7 +105,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
         valueColor = Colors.grey[600];
         break;
       case 'done':
-        displayText = 'Đã khám xong';
+        displayText = 'Đã tiêm xong';
         valueColor = Colors.green;
         break;
       case 'overdue':
@@ -115,13 +133,13 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     );
   }
 
-  Future<void> _confirmCancelAppointment(BuildContext context) async {
+  Future<void> _confirmCancelVaccination(BuildContext context) async {
     final shouldCancel = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Xác nhận huỷ?'),
-          content: Text('Bạn có chắc muốn huỷ lịch khám của ${_currentAppointment?.pet?.petName ?? 'không rõ'} không?'),
+          content: Text('Bạn có chắc muốn huỷ lịch tiêm của ${_currentVaccination?.pet?.petName ?? 'thú cưng này'} không?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -152,33 +170,33 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     if (!mounted || shouldCancel != true) return;
 
     try {
-      if (_currentAppointment?.id == null) {
-        throw Exception('Không thể huỷ lịch hẹn vì không có ID.');
+      if (_currentVaccination?.vaccinationId == null) {
+        throw Exception('Không thể huỷ lịch tiêm vì không có ID.');
       }
 
-      await _appointmentService.updateAppointmentStatus(_currentAppointment!.id!, 'cancelled');
+      await _vaccinationService.updateVaccinationStatus(_currentVaccination!.vaccinationId!, 'cancelled');
       setState(() {
-        _currentAppointment = _currentAppointment!.copyWith(status: 'cancelled');
+        _currentVaccination = _currentVaccination!.copyWith(status: 'cancelled');
         _hasDataChanged = true;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã huỷ lịch khám của ${_currentAppointment?.pet?.petName ?? 'không rõ'} thành công!')),
+        SnackBar(content: Text('Đã huỷ lịch tiêm của ${_currentVaccination?.pet?.petName ?? 'thú cưng'} thành công!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi huỷ lịch khám: $e')),
+        SnackBar(content: Text('Lỗi khi huỷ lịch tiêm: $e')),
       );
     }
   }
 
-  Future<void> _confirmCompleteAppointment(BuildContext context) async {
+  Future<void> _confirmCompleteVaccination(BuildContext context) async {
     final shouldComplete = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: const Text('Xác nhận hoàn tất?'),
-          content: Text('Bạn có chắc muốn xác nhận lịch khám của ${_currentAppointment?.pet?.petName ?? 'không rõ'} đã hoàn tất không?'),
+          content: Text('Bạn có chắc muốn xác nhận lịch tiêm của ${_currentVaccination?.pet?.petName ?? 'thú cưng này'} đã hoàn tất không?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -194,7 +212,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 Navigator.of(dialogContext).pop(true);
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green
+                  backgroundColor: Colors.green
               ),
               child: const Text(
                 'Xác nhận',
@@ -209,52 +227,51 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
     if (!mounted || shouldComplete != true) return;
 
     try {
-      if (_currentAppointment?.id == null) {
+      if (_currentVaccination?.vaccinationId == null) {
         throw Exception('Không thể xác nhận hoàn tất vì không có ID.');
       }
 
-      await _appointmentService.updateAppointmentStatus(_currentAppointment!.id!, 'done');
+      await _vaccinationService.updateVaccinationStatus(_currentVaccination!.vaccinationId!, 'done');
       setState(() {
-        _currentAppointment = _currentAppointment!.copyWith(status: 'done');
+        _currentVaccination = _currentVaccination!.copyWith(status: 'done');
         _hasDataChanged = true;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Đã xác nhận lịch khám của ${_currentAppointment?.pet?.petName ?? 'thú cưng'} hoàn tất!')),
+        SnackBar(content: Text('Đã xác nhận lịch tiêm của ${_currentVaccination?.pet?.petName ?? 'thú cưng'} hoàn tất!')),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi khi xác nhận lịch khám: $e')),
+        SnackBar(content: Text('Lỗi khi xác nhận lịch tiêm: $e')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Chi tiết lịch khám'),
+          title: const Text('Chi tiết lịch tiêm'),
           backgroundColor: Colors.lightBlueAccent,
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (_currentAppointment == null) {
+    if (_currentVaccination == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Chi tiết lịch khám'),
+          title: const Text('Chi tiết lịch tiêm'),
           backgroundColor: Colors.lightBlueAccent,
         ),
-        body: const Center(child: Text('Không thể tải thông tin lịch khám. Vui lòng thử lại.')),
+        body: const Center(child: Text('Không thể tải thông tin lịch tiêm. Vui lòng thử lại.')),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Lịch khám - ${_currentAppointment!.pet?.petName}'),
+        title: Text('Lịch tiêm - ${_currentVaccination!.pet?.petName}'),
         centerTitle: true,
         backgroundColor: Colors.lightBlueAccent,
         leading: IconButton(
@@ -279,15 +296,15 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildDetailRow(
-                      'Ngày - Giờ khám:',
-                      DateFormat('dd/MM/yyyy - HH:mm').format(_currentAppointment!.appointmentDatetime.toLocal()),
+                      'Ngày - Giờ tiêm:',
+                      DateFormat('dd/MM/yyyy - HH:mm').format(_currentVaccination!.vaccinationDatetime.toLocal()),
                     ),
-                    _buildStatusRow(_currentAppointment!.status),
+                    _buildVaccinationDetailRow('Bệnh tiêm phòng:', _currentVaccination!.diseasePrevented),
+                    _buildStatusRow(_currentVaccination!.status),
                   ],
                 ),
               ),
             ),
-
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -299,8 +316,8 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: Colors.blue.shade100,
-                      backgroundImage: _currentAppointment!.pet?.imageURL?.isNotEmpty == true
-                          ? NetworkImage(_currentAppointment!.pet!.imageURL!)
+                      backgroundImage: _currentVaccination!.pet?.imageURL?.isNotEmpty == true
+                          ? NetworkImage(_currentVaccination!.pet!.imageURL!)
                           : const AssetImage('assets/images/logo_bg.png') as ImageProvider,
                     ),
                     const SizedBox(width: 16),
@@ -310,7 +327,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                         children: [
                           const Text('Thú cưng:', style: TextStyle(fontSize: 14, color: Colors.black54)),
                           Text(
-                            _currentAppointment!.pet?.petName ?? 'Không rõ',
+                            _currentVaccination!.pet?.petName ?? 'Không rõ',
                             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.lightBlue),
                           ),
                         ],
@@ -320,7 +337,6 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 ),
               ),
             ),
-
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -332,18 +348,18 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: Colors.blue.shade100,
-                      backgroundImage: _currentAppointment!.veterinarian?.avatarURL?.isNotEmpty == true
-                          ? NetworkImage(_currentAppointment!.veterinarian!.avatarURL!)
-                          : const AssetImage('assets/images/avatar.png') as ImageProvider,
+                      backgroundImage: _currentVaccination!.vaccine?.imageURL?.isNotEmpty == true
+                          ? NetworkImage(_currentVaccination!.vaccine!.imageURL!)
+                          : const AssetImage('assets/images/logo_bg.png') as ImageProvider,
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Bác sĩ phụ trách:', style: TextStyle(fontSize: 14, color: Colors.black54)),
+                          const Text('Vaccine sử dụng:', style: TextStyle(fontSize: 14, color: Colors.black54)),
                           Text(
-                            _currentAppointment!.veterinarian?.fullName ?? 'Không rõ',
+                            _currentVaccination!.vaccine?.medicineName ?? 'Không rõ',
                             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.green),
                           ),
                         ],
@@ -356,7 +372,7 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
           ],
         ),
       ),
-      bottomNavigationBar: (_currentAppointment!.status == 'confirmed')
+      bottomNavigationBar: (_currentVaccination!.status == 'confirmed')
           ? SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -368,9 +384,9 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => _confirmCompleteAppointment(context),
+                    onPressed: () => _confirmCompleteVaccination(context),
                     icon: const Icon(Icons.check_circle, color: Colors.white),
-                    label: const Text('Xác nhận đã khám', style: TextStyle(color: Colors.white, fontSize: 16)),
+                    label: const Text('Xác nhận đã tiêm', style: TextStyle(color: Colors.white, fontSize: 16)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -385,15 +401,15 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _isLoading || _currentAppointment == null ? null : () async {
+                      onPressed: _isLoading || _currentVaccination == null ? null : () async {
                         final bool? hasUpdated = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => EditAppointmentScreen(appointment: widget.appointment),
+                            builder: (_) => EditVaccinationScreen(vaccination: widget.vaccination),
                           ),
                         );
                         if (hasUpdated == true) {
-                          await _loadAppointmentData();
+                          await _loadVaccinationData();
                           _hasDataChanged = true;
                         }
                       },
@@ -411,9 +427,9 @@ class _AppointmentDetailPageState extends State<AppointmentDetailPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _isLoading || _currentAppointment == null ? null : () => _confirmCancelAppointment(context),
+                      onPressed: _isLoading || _currentVaccination == null ? null : () => _confirmCancelVaccination(context),
                       icon: const Icon(Icons.cancel, color: Colors.white),
-                      label: const Text('Hủy lịch khám', style: TextStyle(color: Colors.white)),
+                      label: const Text('Hủy lịch tiêm', style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         padding: const EdgeInsets.symmetric(vertical: 14),

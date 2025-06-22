@@ -29,7 +29,7 @@ class _MedicineListPageState extends State<MedicineListPage> {
 
   Future<void> _fetchMedicines() async {
     setState(() {
-      _medicinesFuture = _medicineService.fetchAllMedicines();
+      _medicinesFuture = _medicineService.getAllMedicines();
     });
     try {
       _allMedicines = await _medicinesFuture;

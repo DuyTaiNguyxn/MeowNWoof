@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:meow_n_woof/app_settings.dart';
-import 'package:meow_n_woof/providers/appointment_provider.dart';
-import 'package:meow_n_woof/providers/vaccination_schedule_provider.dart';
 import 'package:meow_n_woof/services/appointment_service.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/image_upload_service.dart';
 import 'package:meow_n_woof/services/medical_record_service.dart';
+import 'package:meow_n_woof/services/medicine_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
 import 'package:meow_n_woof/services/species_breed_service.dart';
 import 'package:meow_n_woof/services/user_service.dart';
@@ -46,8 +45,9 @@ void main() async {
         Provider<VaccinationService>(
           create: (context) => VaccinationService(context.read<AuthService>()),
         ),
-        ChangeNotifierProvider(create: (_) => VaccinationScheduleProvider()),
-        ChangeNotifierProvider(create: (_) => AppointmentProvider()),
+        Provider<MedicineService>(
+          create: (context) => MedicineService(),
+        ),
       ],
       child: const MyApp(),
     ),

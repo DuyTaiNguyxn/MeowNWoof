@@ -5,7 +5,7 @@ import 'package:meow_n_woof/models/medicine.dart';
 class MedicineService {
   static const String _baseUrl = 'http://10.0.2.2:3000/api/medicines';
 
-  Future<List<Medicine>> fetchAllMedicines() async {
+  Future<List<Medicine>> getAllMedicines() async {
     try {
       final response = await http.get(Uri.parse(_baseUrl));
       if (response.statusCode == 200) {
@@ -20,7 +20,7 @@ class MedicineService {
     }
   }
 
-  Future<Medicine> fetchMedicineById(int id) async {
+  Future<Medicine> getMedicineById(int id) async {
     try {
       final String url = '$_baseUrl/$id';
       final response = await http.get(Uri.parse(url));

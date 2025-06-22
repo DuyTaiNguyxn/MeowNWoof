@@ -159,15 +159,15 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Cập nhật lịch hẹn thành công!'),
+            content: Text('Cập nhật lịch khám thành công!'),
             backgroundColor: Colors.lightGreen,
           ),
         );
         Navigator.pop(context, true);
       } catch (e) {
-        print('[Edit Appointment] Lỗi cập nhật lịch hẹn: ${e.toString()}');
+        print('[Edit Appointment] Lỗi cập nhật lịch khám: ${e.toString()}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi cập nhật lịch hẹn: ${e.toString()}')),
+          SnackBar(content: Text('Lỗi cập nhật lịch khám: ${e.toString()}')),
         );
       } finally {
         setState(() {
@@ -181,7 +181,7 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chỉnh sửa Lịch hẹn khám'),
+        title: const Text('Chỉnh sửa Lịch khám'),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: _isLoading
@@ -238,20 +238,20 @@ class _EditAppointmentScreenState extends State<EditAppointmentScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Chọn Ngày hẹn
+              // Chọn Ngày khám
               ListTile(
                 title: Text(
-                  'Ngày hẹn: ${DateFormat('dd/MM/yyyy').format(_selectedDate.toLocal())}',
+                  'Ngày khám: ${DateFormat('dd/MM/yyyy').format(_selectedDate.toLocal())}',
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () => _selectDate(context),
               ),
               const SizedBox(height: 10),
 
-              // Chọn Giờ hẹn
+              // Chọn Giờ khám
               ListTile(
                 title: Text(
-                  'Giờ hẹn: ${DateFormat('HH:mm').format(DateTime(2023, 1, 1, _selectedTime.hour, _selectedTime.minute))}',
+                  'Giờ khám: ${DateFormat('HH:mm').format(DateTime(2023, 1, 1, _selectedTime.hour, _selectedTime.minute))}',
                 ),
                 trailing: const Icon(Icons.access_time),
                 onTap: () => _selectTime(context),

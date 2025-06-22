@@ -156,13 +156,13 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
         if (!mounted) return;
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Tạo lịch hẹn thành công!')),
+          const SnackBar(content: Text('Tạo lịch khám thành công!')),
         );
         Navigator.pop(context, true);
       } catch (e) {
-        print('[Create Appointment] Lỗi tạo lịch hẹn: ${e.toString()}');
+        print('[Create Appointment] Lỗi tạo lịch khám: ${e.toString()}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi tạo lịch hẹn: ${e.toString()}')),
+          SnackBar(content: Text('Lỗi tạo lịch khám: ${e.toString()}')),
         );
       } finally {
         setState(() {
@@ -176,7 +176,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tạo Lịch hẹn khám'),
+        title: const Text('Tạo Lịch khám'),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: _isLoading
@@ -233,20 +233,20 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Chọn Ngày hẹn
+              // Chọn Ngày khám
               ListTile(
                 title: Text(
-                  'Ngày hẹn: ${DateFormat('dd/MM/yyyy').format(_selectedDate.toLocal())}',
+                  'Ngày khám: ${DateFormat('dd/MM/yyyy').format(_selectedDate.toLocal())}',
                 ),
                 trailing: const Icon(Icons.calendar_today),
                 onTap: () => _selectDate(context),
               ),
               const SizedBox(height: 10),
 
-              // Chọn Giờ hẹn
+              // Chọn Giờ khám
               ListTile(
                 title: Text(
-                  'Giờ hẹn: ${DateFormat('HH:mm').format(DateTime(2023, 1, 1, _selectedTime.hour, _selectedTime.minute))}',
+                  'Giờ khám: ${DateFormat('HH:mm').format(DateTime(2023, 1, 1, _selectedTime.hour, _selectedTime.minute))}',
                 ),
                 trailing: const Icon(Icons.access_time),
                 onTap: () => _selectTime(context),
@@ -266,7 +266,7 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
             onPressed: _submitAppointment,
             icon: const Icon(Icons.add, color: Colors.white),
             label: const Text(
-              'Tạo lịch hẹn',
+              'Tạo lịch khám',
               style: TextStyle(fontSize: 16, color: Colors.white),
             ),
             style: ElevatedButton.styleFrom(
