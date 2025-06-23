@@ -7,6 +7,7 @@ import 'package:meow_n_woof/services/image_upload_service.dart';
 import 'package:meow_n_woof/services/medical_record_service.dart';
 import 'package:meow_n_woof/services/medicine_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/services/prescription_service.dart';
 import 'package:meow_n_woof/services/species_breed_service.dart';
 import 'package:meow_n_woof/services/user_service.dart';
 import 'package:meow_n_woof/services/vaccination_service.dart';
@@ -44,6 +45,9 @@ void main() async {
         ),
         Provider<VaccinationService>(
           create: (context) => VaccinationService(context.read<AuthService>()),
+        ),
+        Provider<PrescriptionService>(
+          create: (context) => PrescriptionService(context.read<AuthService>()),
         ),
         Provider<MedicineService>(
           create: (context) => MedicineService(),

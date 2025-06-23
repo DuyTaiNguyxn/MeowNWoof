@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/medical_record.dart';
 import 'package:intl/intl.dart';
 import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/views/medical_record/edit_medical_record.dart';
+import 'package:meow_n_woof/views/prescription/prescription_detail.dart';
 import 'package:provider/provider.dart';
 import 'package:meow_n_woof/services/medical_record_service.dart';
 
@@ -68,6 +70,31 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _navigateToPrescriptions(int medicalRecordId) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+
+    if (authService.currentUser?.role == 'veterinarian') {
+      final hasPrescriptionChange = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PrescriptionDetailPage(medicalRecordId: medicalRecordId),
+        ),
+      );
+
+      if (hasPrescriptionChange == true) {
+        // Nếu muốn xử lý cập nhật gì đó sau khi quay lại
+        // Ví dụ: reload lại medical record chẳng hạn
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chỉ bác sĩ mới có thể tạo đơn thuốc.'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -143,26 +170,38 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
               margin: const EdgeInsets.only(bottom: 20.0),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    CircleAvatar(
+                      radius: 32,
+                      backgroundColor: Colors.blue.shade100,
+                      backgroundImage: widget.pet.imageURL?.isNotEmpty == true
+                          ? NetworkImage(widget.pet.imageURL!)
+                          : const AssetImage('assets/images/logo_bg.png') as ImageProvider,
+                    ),
+                    const SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '${widget.pet.petName} - ${widget.pet.age} tuổi',
+                              style: const TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
                         Text(
-                          '${widget.pet.petName} - ${widget.pet.age} tuổi',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blueAccent,
-                          ),
+                          '${widget.pet.breed?.breedName ?? 'Không rõ'}  - ${widget.pet.weight != null ? '${widget.pet.weight!.toStringAsFixed(1)} kg' : 'Không rõ'}',
+                          style: const TextStyle(fontSize: 16, color: Colors.black87),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${widget.pet.breed?.breedName ?? 'Không rõ'}  - ${widget.pet.weight != null ? '${widget.pet.weight!.toStringAsFixed(1)} kg' : 'Không rõ'}',
-                      style: const TextStyle(fontSize: 16, color: Colors.black87),
                     ),
                   ],
                 ),
@@ -332,9 +371,9 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: _isLoading || _currentRecord == null ? null : () async {
-                    // Logic cho nút "Lên đơn thuốc"
-                  },
+                  onPressed: _isLoading || _currentRecord == null
+                      ? null
+                      : () => _navigateToPrescriptions(_currentRecord!.id!),
                   icon: const Icon(Icons.medication, color: Colors.white),
                   label: const Text('Lên đơn thuốc', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(

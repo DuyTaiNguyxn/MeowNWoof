@@ -242,7 +242,6 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
           padding: const EdgeInsets.all(16.0),
           child: ElevatedButton.icon(
             onPressed: _submitEditVaccination,
-            icon: const Icon(Icons.save),
             label: const Text(
               'Lưu thay đổi',
               style: TextStyle(fontSize: 16),
