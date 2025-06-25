@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:meow_n_woof/models/medical_record.dart';
 import 'package:intl/intl.dart';
 import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/models/prescription.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
+import 'package:meow_n_woof/services/prescription_service.dart';
 import 'package:meow_n_woof/views/medical_record/edit_medical_record.dart';
 import 'package:meow_n_woof/views/prescription/prescription_detail.dart';
 import 'package:provider/provider.dart';
@@ -73,28 +75,61 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
     }
   }
 
-  Future<void> _navigateToPrescriptions(int medicalRecordId) async {
+  Future<void> _navigateToPrescription(int medicalRecordId) async {
     final authService = Provider.of<AuthService>(context, listen: false);
+    final prescriptionService = context.read<PrescriptionService>();
 
-    if (authService.currentUser?.role == 'veterinarian') {
-      final hasPrescriptionChange = await Navigator.push<bool>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => PrescriptionDetailPage(medicalRecordId: medicalRecordId),
-        ),
-      );
-
-      if (hasPrescriptionChange == true) {
-        // Nếu muốn xử lý cập nhật gì đó sau khi quay lại
-        // Ví dụ: reload lại medical record chẳng hạn
-      }
-    } else {
+    if (authService.currentUser?.role != 'veterinarian') {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Chỉ bác sĩ mới có thể tạo đơn thuốc.'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
+    }
+
+    try {
+      final existingPrescription = await prescriptionService.getPrescriptionByRecordId(medicalRecordId);
+
+      final hasPrescriptionChange = await Navigator.push<bool>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PrescriptionDetailPage(medicalRecordId: existingPrescription.medicalRecordId),
+        ),
+      );
+
+      if (hasPrescriptionChange == true) {
+        // xử lý khi quay lại có thay đổi
+      }
+    } catch (e) {
+      // Nếu không có đơn thuốc → tạo mới
+      try {
+        final newPrescription = Prescription(
+          medicalRecordId: _currentRecord!.id!,
+          veterinarianId: authService.currentUser!.employeeId!,
+        );
+
+        await prescriptionService.createPrescription(newPrescription);
+
+        final hasPrescriptionChange = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PrescriptionDetailPage(medicalRecordId: newPrescription.medicalRecordId),
+          ),
+        );
+
+        if (hasPrescriptionChange == true) {
+          // xử lý khi quay lại có thay đổi
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể tạo đơn thuốc mới.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -373,7 +408,7 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
                 child: ElevatedButton.icon(
                   onPressed: _isLoading || _currentRecord == null
                       ? null
-                      : () => _navigateToPrescriptions(_currentRecord!.id!),
+                      : () => _navigateToPrescription(_currentRecord!.id!),
                   icon: const Icon(Icons.medication, color: Colors.white),
                   label: const Text('Lên đơn thuốc', style: TextStyle(color: Colors.white)),
                   style: ElevatedButton.styleFrom(

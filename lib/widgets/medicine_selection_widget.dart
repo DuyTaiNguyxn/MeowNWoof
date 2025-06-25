@@ -4,21 +4,21 @@ import 'package:provider/provider.dart';
 import 'package:meow_n_woof/models/medicine.dart';
 import 'package:meow_n_woof/services/medicine_service.dart';
 
-class OtherMedicineSelectionWidget extends StatefulWidget {
-  final Medicine? selectedOtherMedicine;
-  final Function(Medicine) onOtherMedicineSelected;
+class MedicineSelectionWidget extends StatefulWidget {
+  final Medicine? selectedMedicine;
+  final Function(Medicine) onMedicineSelected;
 
-  const OtherMedicineSelectionWidget({
+  const MedicineSelectionWidget({
     super.key,
-    required this.selectedOtherMedicine,
-    required this.onOtherMedicineSelected,
+    required this.selectedMedicine,
+    required this.onMedicineSelected,
   });
 
   @override
-  State<OtherMedicineSelectionWidget> createState() => _OtherMedicineSelectionWidgetState();
+  State<MedicineSelectionWidget> createState() => _MedicineSelectionWidgetState();
 }
 
-class _OtherMedicineSelectionWidgetState extends State<OtherMedicineSelectionWidget> {
+class _MedicineSelectionWidgetState extends State<MedicineSelectionWidget> {
   List<Medicine> _allOtherMedicines = [];
   List<Medicine> _filteredOtherMedicines = [];
 
@@ -73,8 +73,8 @@ class _OtherMedicineSelectionWidgetState extends State<OtherMedicineSelectionWid
     setState(() {
       _filteredOtherMedicines = _allOtherMedicines.where((medicine) {
         final name = medicine.medicineName.toLowerCase();
-        final manufacturer = medicine.manufacturer?.toLowerCase() ?? '';
-        final speciesUse = medicine.speciesUse?.toLowerCase() ?? '';
+        final manufacturer = medicine.manufacturer?.toLowerCase() ?? 'Không rõ';
+        final speciesUse = medicine.speciesUse?.toLowerCase() ?? 'Không rõ';
 
         return name.contains(query) ||
             manufacturer.contains(query) ||
@@ -122,7 +122,7 @@ class _OtherMedicineSelectionWidgetState extends State<OtherMedicineSelectionWid
                 itemCount: _filteredOtherMedicines.length,
                 itemBuilder: (context, index) {
                   final medicine = _filteredOtherMedicines[index];
-                  final isSelected = widget.selectedOtherMedicine?.medicineId == medicine.medicineId;
+                  final isSelected = widget.selectedMedicine?.medicineId == medicine.medicineId;
 
                   return Card(
                     elevation: 2,
@@ -137,7 +137,7 @@ class _OtherMedicineSelectionWidgetState extends State<OtherMedicineSelectionWid
                         radius: 30,
                         backgroundImage: medicine.imageURL != null && medicine.imageURL!.isNotEmpty
                             ? NetworkImage(medicine.imageURL!) as ImageProvider<Object>
-                            : const AssetImage('assets/images/default_medicine_avatar.png'),
+                            : const AssetImage('assets/images/logo_bg.png'),
                       ),
                       title: Text(
                         medicine.medicineName,

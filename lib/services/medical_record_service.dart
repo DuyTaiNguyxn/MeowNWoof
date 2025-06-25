@@ -183,31 +183,4 @@ class MedicalRecordService {
       throw Exception('Failed to connect to server or process data: $e');
     }
   }
-
-  Future<List<PetMedicalRecord>> getMedicalRecordsByVeterinarianId(int veterinarianId) async {
-    try {
-      final headers = await _getHeadersWithAuth();
-      final response = await http.get(
-          Uri.parse('$_baseUrl/veterinarian/$veterinarianId'),
-          headers: headers
-      );
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseBody = json.decode(response.body);
-        final List<dynamic> data = responseBody['data'];
-        print('[RecordService] getMedicalRecordsByVeterinarianId responseBody: $responseBody'); // Thêm log cụ thể
-        return data.map((json) => PetMedicalRecord.fromJson(json)).toList();
-      } else if (response.statusCode == 404) {
-        return [];
-      }
-      else {
-        final Map<String, dynamic> errorBody = json.decode(response.body);
-        print('[RecordService] getMedicalRecordsByVeterinarianId Failed: ${errorBody['message']} Status: ${response.statusCode}'); // Thêm log cụ thể
-        throw Exception('Failed to load medical records by veterinarian: ${errorBody['message']}');
-      }
-    } catch (e) {
-      print('Error in getMedicalRecordsByVeterinarianId (Service Catch Block): $e'); // Sửa tên log
-      throw Exception('Failed to connect to server or process data: $e');
-    }
-  }
 }

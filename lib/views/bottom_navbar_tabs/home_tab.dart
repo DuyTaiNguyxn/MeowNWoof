@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:meow_n_woof/models/medical_record.dart';
 import 'package:meow_n_woof/models/pet.dart';
+import 'package:meow_n_woof/models/prescription.dart';
+import 'package:meow_n_woof/services/prescription_service.dart';
 import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
 import 'package:meow_n_woof/views/medicine/medicine_list.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
 import 'package:meow_n_woof/views/pet/pet_profile_detail.dart';
+import 'package:meow_n_woof/views/prescription/prescription_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/widgets/med_record_selection_widget.dart';
 import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 import 'package:provider/provider.dart';
 
@@ -148,8 +153,21 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   void _navigateToCreatePrescriptions() async {
-    final authService = Provider.of<AuthService>(context,listen: false);
-    if (authService.currentUser?.role == 'veterinarian') {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final prescriptionService = context.read<PrescriptionService>();
+
+    if (authService.currentUser?.role != 'veterinarian') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Chỉ bác sĩ mới có thể tạo đơn thuốc.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // 1. Chọn thú cưng
       final selectedPet = await Navigator.push<Pet>(
         context,
         MaterialPageRoute(
@@ -162,21 +180,68 @@ class _HomeTabState extends State<HomeTab> {
         ),
       );
 
-      if (selectedPet != null) {
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (_) => CreatePrescriptionsScreen(selectedPet: selectedPet),
-        //   ),
-        // );
-      }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Chỉ bác sĩ mới có thể tạo đơn thuốc.'),
-          backgroundColor: Colors.red,
+      if (selectedPet == null) return;
+
+      // 2. Chọn hồ sơ y tế của thú cưng đó
+      final selectedRecord = await Navigator.push<PetMedicalRecord>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => MedicalRecordSelectionWidget(pet: selectedPet),
         ),
       );
+
+      if (selectedRecord == null) return;
+
+      final medicalRecordId = selectedRecord.id!;
+      final employeeId = authService.currentUser?.employeeId;
+
+      try {
+        // 3. Kiểm tra xem đã có đơn thuốc chưa
+        final existingPrescription = await prescriptionService.getPrescriptionByRecordId(medicalRecordId);
+
+        // 3a. Nếu có đơn thuốc → chuyển đến chi tiết
+        final hasPrescriptionChange = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (_) => PrescriptionDetailPage(medicalRecordId: existingPrescription.medicalRecordId),
+          ),
+        );
+
+        if (hasPrescriptionChange == true) {
+          // xử lý cập nhật nếu cần
+        }
+      } catch (e) {
+        // 3b. Nếu chưa có đơn thuốc → tạo mới
+        try {
+          final newPrescription = Prescription(
+            medicalRecordId: medicalRecordId,
+            veterinarianId: employeeId!,
+          );
+
+          final created = await prescriptionService.createPrescription(newPrescription);
+
+          final hasPrescriptionChange = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PrescriptionDetailPage(medicalRecordId: created.medicalRecordId),
+            ),
+          );
+
+          if (hasPrescriptionChange == true) {
+            // xử lý cập nhật nếu cần
+          }
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Không thể tạo đơn thuốc mới.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      // Có thể log nếu cần
+      debugPrint('Lỗi khi tạo đơn thuốc: $e');
     }
   }
 

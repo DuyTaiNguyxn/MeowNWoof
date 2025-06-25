@@ -45,7 +45,7 @@ class PrescriptionService {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      print('📦 JSON từ server: $data');
+      //print('📦 JSON từ server: $data');
       return Prescription.fromJson(data);
     } else {
       throw Exception('Không thể lấy đơn thuốc');
@@ -67,13 +67,16 @@ class PrescriptionService {
     }
   }
 
-  Future<Prescription> updatePrescription(Prescription detail) async {
+  Future<Prescription> updatePrescription(Prescription prescription) async {
     final headers = await _getHeadersWithAuth();
     final response = await http.put(
-      Uri.parse('$_baseUrl/prescriptions/${detail.prescriptionId}'),
+      Uri.parse('$_baseUrl/prescriptions/${prescription.prescriptionId}'),
       headers: headers,
-      body: json.encode(detail.toJson()),
+      body: json.encode(prescription.toJson()),
     );
+
+    print('[Update Prescription] Status: ${response.statusCode}');
+    print('[Update Prescription] Body: ${response.body}');
 
     if (response.statusCode == 200) {
       return Prescription.fromJson(json.decode(response.body));

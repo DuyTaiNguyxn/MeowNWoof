@@ -1,5 +1,5 @@
 class PrescriptionItem {
-  final int itemId;
+  final int? itemId;
   final int prescriptionId;
   final int medicineId;
   final int quantity;
@@ -8,7 +8,7 @@ class PrescriptionItem {
   final String? imageUrl;
 
   PrescriptionItem({
-    required this.itemId,
+    this.itemId,
     required this.prescriptionId,
     required this.medicineId,
     required this.quantity,
@@ -19,7 +19,7 @@ class PrescriptionItem {
 
   factory PrescriptionItem.fromJson(Map<String, dynamic> json) {
     return PrescriptionItem(
-      itemId: json['item_id'],
+      itemId: json['item_id'] != null ? int.tryParse(json['item_id'].toString()) : null,
       prescriptionId: json['prescription_id'],
       medicineId: json['medicine_id'],
       quantity: json['quantity'],

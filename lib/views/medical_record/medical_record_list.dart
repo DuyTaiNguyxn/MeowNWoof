@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:meow_n_woof/models/medical_record.dart';
 import 'package:meow_n_woof/models/pet.dart';
@@ -109,8 +108,8 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
       context,
       MaterialPageRoute(
         builder: (context) => MedicalRecordDetailPage(
-            pet: widget.selectedPet,
-            record: record,
+          pet: widget.selectedPet,
+          record: record,
         ),
       ),
     );
@@ -120,48 +119,6 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Danh sách hồ sơ khám bệnh đã được làm mới!')),
-        );
-      }
-    }
-  }
-
-  void _confirmDelete(BuildContext context, PetMedicalRecord recordToDelete) async {
-    final shouldDelete = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Xác nhận xoá?'),
-          content: Text('Bạn có chắc muốn xoá hồ sơ ngày ${DateFormat('dd/MM/yyyy').format(recordToDelete.recordDate.toLocal())} không?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Không'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: const Text('Có'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (shouldDelete == true) {
-      try {
-        if (recordToDelete.id == null) {
-          throw Exception('Medical Record ID is missing for deletion.');
-        }
-        await recordService.deleteMedicalRecord(recordToDelete.id!);
-        setState(() {
-          _allRecords.removeWhere((record) => record.id == recordToDelete.id);
-          _filteredRecords.removeWhere((record) => record.id == recordToDelete.id);
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xoá hồ sơ ngày ${DateFormat('dd/MM/yyyy').format(recordToDelete.recordDate.toLocal())}')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Lỗi khi xoá hồ sơ: ${e.toString()}')),
         );
       }
     }
@@ -258,79 +215,63 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
               itemBuilder: (context, index) {
                 final record = _filteredRecords[index];
 
-                return Slidable(
-                  key: ValueKey(record.id),
-                  endActionPane: ActionPane(
-                    motion: const ScrollMotion(),
-                    extentRatio: 0.25,
-                    children: [
-                      SlidableAction(
-                        onPressed: (context) => _confirmDelete(context, record),
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        icon: Icons.delete,
-                        label: 'Xoá',
+                return InkWell(
+                  // Truyền bản ghi vào _handleRecordSelect
+                  onTap: () => _handleRecordSelect(record),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    ],
-                  ),
-                  child: InkWell(
-                    // Truyền bản ghi vào _handleRecordSelect
-                    onTap: () => _handleRecordSelect(record),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 3,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '📅 Ngày: ${DateFormat('dd/MM/yyyy').format(record.recordDate.toLocal())}',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              const SizedBox(height: 6),
-                              RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(color: Colors.black),
-                                  children: [
-                                    const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
-                                    TextSpan(
-                                      text: record.veterinarian?.fullName ?? 'Không rõ',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blueAccent,
-                                      ),
+                      elevation: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '📅 Ngày: ${DateFormat('dd/MM/yyyy').format(record.recordDate.toLocal())}',
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            const SizedBox(height: 6),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
+                                  TextSpan(
+                                    text: record.veterinarian?.fullName ?? 'Không rõ',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blueAccent,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 6),
-                              Text('🤒 Triệu chứng: ${record.symptoms ?? 'Chưa cập nhật'}'),
-                              const SizedBox(height: 6),
-                              RichText(
-                                text: TextSpan(
-                                  style: const TextStyle(color: Colors.black),
-                                  children: [
-                                    const TextSpan(text: '📝 Chẩn đoán: '),
-                                    TextSpan(
-                                      text: record.finalDiagnosis?.isNotEmpty == true
-                                          ? record.finalDiagnosis!
-                                          : 'Chưa có',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.orange,
-                                      ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text('🤒 Triệu chứng: ${record.symptoms ?? 'Chưa cập nhật'}'),
+                            const SizedBox(height: 6),
+                            RichText(
+                              text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                                  const TextSpan(text: '📝 Chẩn đoán: '),
+                                  TextSpan(
+                                    text: record.finalDiagnosis?.isNotEmpty == true
+                                        ? record.finalDiagnosis!
+                                        : 'Chưa có',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.orange,
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

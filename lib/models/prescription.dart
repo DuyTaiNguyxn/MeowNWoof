@@ -1,7 +1,7 @@
 import 'package:meow_n_woof/models/prescription_item.dart';
 
 class Prescription {
-  final int prescriptionId;
+  final int? prescriptionId;
   final int medicalRecordId;
   final int veterinarianId;
   final String? veterinarianNote;
@@ -9,7 +9,7 @@ class Prescription {
   final List<PrescriptionItem>? items;
 
   Prescription({
-    required this.prescriptionId,
+    this.prescriptionId,
     required this.medicalRecordId,
     required this.veterinarianId,
     this.veterinarianNote,
@@ -27,7 +27,7 @@ class Prescription {
     }
 
     return Prescription(
-      prescriptionId: json['prescription_id'],
+      prescriptionId: json['prescription_id'] != null ? int.tryParse(json['prescription_id'].toString()) : null,
       medicalRecordId: json['medical_record_id'],
       veterinarianId: json['veterinarian_id'],
       veterinarianNote: json['veterinarian_note']?.toString(),
@@ -43,5 +43,23 @@ class Prescription {
       'veterinarian_note': veterinarianNote,
       'prescription_date': prescriptionDate,
     };
+  }
+
+  Prescription copyWith({
+    int? prescriptionId,
+    int? medicalRecordId,
+    int? veterinarianId,
+    String? veterinarianNote,
+    String? prescriptionDate,
+    List<PrescriptionItem>? items,
+  }) {
+    return Prescription(
+      prescriptionId: prescriptionId ?? this.prescriptionId,
+      medicalRecordId: medicalRecordId ?? this.medicalRecordId,
+      veterinarianId: veterinarianId ?? this.veterinarianId,
+      veterinarianNote: veterinarianNote ?? this.veterinarianNote,
+      prescriptionDate: prescriptionDate ?? this.prescriptionDate,
+      items: items ?? this.items, // Quan trọng: Nếu items không được cung cấp, giữ nguyên items cũ
+    );
   }
 }

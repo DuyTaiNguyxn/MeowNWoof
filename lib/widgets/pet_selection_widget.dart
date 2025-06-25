@@ -203,7 +203,7 @@ class _PetSelectionWidgetState extends State<PetSelectionWidget> {
                         ),
                       ),
                       subtitle: Text(
-                        '${pet.owner?.ownerName ?? 'N/A'} - ${pet.owner?.phone ?? 'N/A'}',
+                        '${pet.owner?.ownerName ?? 'Không rõ'} - ${pet.owner?.phone ?? 'Không rõ'}',
                         style: TextStyle(color: Colors.grey[700]),
                       ),
                       onTap: () {
