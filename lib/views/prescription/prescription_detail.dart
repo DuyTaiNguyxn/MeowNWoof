@@ -118,6 +118,48 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
     }
   }
 
+  Future<void> _onDelete(int prescriptionId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Xác nhận xoá thuốc?'),
+        content: Text('Bạn có chắc muốn xoá đơn thuốc này không?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Huỷ'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Xoá', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (confirm == true) {
+      try {
+        await _prescriptionService.deleteAllItemsByPrescriptionId(prescriptionId);
+        await _prescriptionService.deletePrescription(prescriptionId);
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã xoá đơn thuốc')),
+        );
+        Navigator.pop(context);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Lỗi khi xoá: $e')),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _noteController.dispose();
@@ -208,9 +250,11 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
                                 ],
                               )
                             : Text(
-                          _prescription?.veterinarianNote ?? 'Không có',
-                          style: const TextStyle(fontSize: 16, color: Colors.black87, height: 1.4),
-                        ),
+                                _prescription?.veterinarianNote != null && _prescription!.veterinarianNote!.isNotEmpty
+                                    ? _prescription!.veterinarianNote!
+                                    : 'Không có',
+                                style: const TextStyle(fontSize: 20, color: Colors.black87),
+                              ),
                       ],
                     ),
                   ),
@@ -340,8 +384,8 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: xác nhận xoá đơn thuốc
+                  onPressed: () async {
+                    await _onDelete(_prescription!.prescriptionId!);
                   },
                   icon: const Icon(Icons.delete_forever, color: Colors.white),
                   label: const Text('Xoá đơn thuốc', style: TextStyle(color: Colors.white)),

@@ -108,6 +108,8 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
         final newPrescription = Prescription(
           medicalRecordId: _currentRecord!.id!,
           veterinarianId: authService.currentUser!.employeeId!,
+          veterinarianNote: '',
+          prescriptionDate: DateTime.now(),
         );
 
         await prescriptionService.createPrescription(newPrescription);

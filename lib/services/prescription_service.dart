@@ -54,10 +54,16 @@ class PrescriptionService {
 
   Future<Prescription> createPrescription(Prescription prescription) async {
     final headers = await _getHeadersWithAuth();
+
+    final requestBody = prescription.toJson();
+
+    print('[Create Prescription]Request body to be sent:');
+    print(json.encode(requestBody));
+
     final response = await http.post(
       Uri.parse('$_baseUrl/prescriptions'),
       headers: headers,
-      body: json.encode(prescription.toJson()),
+      body: json.encode(requestBody),
     );
 
     if (response.statusCode == 201) {
@@ -124,6 +130,34 @@ class PrescriptionService {
 
     if (response.statusCode != 200) {
       throw Exception('Xoá chi tiết thất bại');
+    }
+  }
+
+  Future<void> deleteAllItemsByPrescriptionId(int prescriptionId) async {
+    final headers = await _getHeadersWithAuth();
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/prescriptions/$prescriptionId/items'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final count = response.toString();
+      print('[Delete Prescription] Đã xoá $count thuốc');
+    } else{
+      throw Exception('Xoá đơn thuốc thất bại');
+    }
+  }
+
+  Future<void> deletePrescription(int prescriptionId) async {
+    final headers = await _getHeadersWithAuth();
+    final response = await http.delete(
+      Uri.parse('$_baseUrl/prescriptions/$prescriptionId'),
+      headers: headers,
+    );
+    if (response.statusCode == 200) {
+      print('[Delete Prescription] Đã xoá đơn thuốc');
+    } else {
+      throw Exception('Cập nhật đơn thuốc thất bại');
     }
   }
 

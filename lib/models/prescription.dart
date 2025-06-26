@@ -5,7 +5,7 @@ class Prescription {
   final int medicalRecordId;
   final int veterinarianId;
   final String? veterinarianNote;
-  final String? prescriptionDate;
+  final DateTime? prescriptionDate;
   final List<PrescriptionItem>? items;
 
   Prescription({
@@ -31,7 +31,9 @@ class Prescription {
       medicalRecordId: json['medical_record_id'],
       veterinarianId: json['veterinarian_id'],
       veterinarianNote: json['veterinarian_note']?.toString(),
-      prescriptionDate: json['prescription_date']?.toString(),
+      prescriptionDate: json['prescription_date'] != null
+          ? DateTime.tryParse(json['prescription_date'].toString())
+          : null,
       items: itemsList,
     );
   }
@@ -41,7 +43,7 @@ class Prescription {
       'medical_record_id': medicalRecordId,
       'veterinarian_id': veterinarianId,
       'veterinarian_note': veterinarianNote,
-      'prescription_date': prescriptionDate,
+      'prescription_date': prescriptionDate?.toIso8601String(),
     };
   }
 
@@ -50,7 +52,7 @@ class Prescription {
     int? medicalRecordId,
     int? veterinarianId,
     String? veterinarianNote,
-    String? prescriptionDate,
+    DateTime? prescriptionDate, // Đã thay đổi kiểu dữ liệu
     List<PrescriptionItem>? items,
   }) {
     return Prescription(
@@ -59,7 +61,7 @@ class Prescription {
       veterinarianId: veterinarianId ?? this.veterinarianId,
       veterinarianNote: veterinarianNote ?? this.veterinarianNote,
       prescriptionDate: prescriptionDate ?? this.prescriptionDate,
-      items: items ?? this.items, // Quan trọng: Nếu items không được cung cấp, giữ nguyên items cũ
+      items: items ?? this.items,
     );
   }
 }

@@ -216,6 +216,8 @@ class _HomeTabState extends State<HomeTab> {
           final newPrescription = Prescription(
             medicalRecordId: medicalRecordId,
             veterinarianId: employeeId!,
+            veterinarianNote: '',
+            prescriptionDate: DateTime.now(),
           );
 
           final created = await prescriptionService.createPrescription(newPrescription);

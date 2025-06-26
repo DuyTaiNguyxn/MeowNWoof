@@ -94,7 +94,7 @@ class _MedicalRecordSelectionWidgetState extends State<MedicalRecordSelectionWid
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chọn hồ sơ - ${widget.pet.petName}'),
+        title: Text('Chọn hồ sơ khám bệnh\ncủa ${widget.pet.petName}'),
         backgroundColor: Colors.lightBlueAccent,
       ),
       body: Column(
