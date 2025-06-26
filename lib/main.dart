@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:meow_n_woof/app_settings.dart';
+import 'package:meow_n_woof/providers/notification_provider.dart';
 import 'package:meow_n_woof/services/appointment_service.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/image_upload_service.dart';
@@ -13,6 +14,7 @@ import 'package:meow_n_woof/services/user_service.dart';
 import 'package:meow_n_woof/services/vaccination_service.dart';
 import 'package:meow_n_woof/views/login.dart';
 import 'package:meow_n_woof/views/home.dart';
+import 'package:meow_n_woof/widgets/local_notification_plugin.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
@@ -20,11 +22,14 @@ void main() async {
   final appSettings = AppSettings();
   await appSettings.loadSettings();
 
+  await initNotifications();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => appSettings),
         ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => NotificationProvider()),
         Provider<UserService>(
           create: (context) => UserService(context.read<AuthService>()),
         ),

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:meow_n_woof/models/medical_record.dart';
+import 'package:meow_n_woof/models/notification_item.dart';
 import 'package:meow_n_woof/models/pet.dart';
 import 'package:meow_n_woof/models/prescription.dart';
-import 'package:meow_n_woof/services/prescription_service.dart';
+import 'package:meow_n_woof/providers/notification_provider.dart';
+import 'package:meow_n_woof/services/medicine_service.dart';
 import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
 import 'package:meow_n_woof/views/medicine/medicine_list.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
@@ -11,6 +14,9 @@ import 'package:meow_n_woof/views/prescription/prescription_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
+import 'package:meow_n_woof/services/appointment_service.dart';
+import 'package:meow_n_woof/services/prescription_service.dart';
+import 'package:meow_n_woof/services/vaccination_service.dart';
 import 'package:meow_n_woof/widgets/med_record_selection_widget.dart';
 import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 import 'package:provider/provider.dart';
@@ -31,12 +37,25 @@ class _HomeTabState extends State<HomeTab> {
   bool _isLoadingPets = true;
   String? _errorMessage;
 
+  String formatDateTime(DateTime dt, {String locale = 'vi'}) {
+    final formatter = DateFormat('HH:mm - dd MMMM, yyyy', locale);
+    return formatter.format(dt);
+  }
+  String formatDate(DateTime dt, {String locale = 'vi'}) {
+    final formatter = DateFormat('dd MMMM, yyyy', locale);
+    return formatter.format(dt);
+  }
+
+
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_onSearch);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadPets();
+      _loadTodayNotifications();
+      _loadUpcomingNotifications();
+      _loadExpiryMedicineNotifications();
     });
   }
 
@@ -62,6 +81,121 @@ class _HomeTabState extends State<HomeTab> {
           _isLoadingPets = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadTodayNotifications() async {
+    final appointmentService = context.read<AppointmentService>();
+    final vaccinationService = context.read<VaccinationService>();
+    final notificationProvider = context.read<NotificationProvider>();
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    try {
+      final appointments = await appointmentService.getAllAppointments();
+      final vaccinations = await vaccinationService.getAllVaccinations();
+
+      final appointmentsToday = appointments.where((a) {
+        final aDate = a.appointmentDatetime.toLocal();
+        return aDate.year == today.year &&
+            aDate.month == today.month &&
+            aDate.day == today.day &&
+            a.status == 'confirmed';
+      });
+
+      for (var appt in appointmentsToday) {
+        notificationProvider.addNotification(NotificationItem(
+          title: 'Lịch khám cho: 🐾 ${appt.pet?.petName}',
+          message: 'Khám lúc ${formatDateTime(appt.appointmentDatetime)} với bác sĩ ${appt.veterinarian?.fullName}',
+          timestamp: DateTime.now(),
+          type: NotificationType.todayAppointment,
+        ));
+      }
+
+      final vaccinationsToday = vaccinations.where((v) {
+        final vDate = v.vaccinationDatetime.toLocal();
+        return vDate.year == today.year &&
+            vDate.month == today.month &&
+            vDate.day == today.day &&
+            v.status == 'confirmed';
+      });
+
+      for (var vac in vaccinationsToday) {
+        notificationProvider.addNotification(NotificationItem(
+          title: 'Lịch tiêm cho: 🐾 ${vac.pet?.petName}',
+          message: '💉 ${vac.vaccine?.medicineName} lúc ${formatDateTime(vac.vaccinationDatetime)}',
+          timestamp: DateTime.now(),
+          type: NotificationType.todayVaccination,
+        ));
+      }
+    } catch (e) {
+      debugPrint('Lỗi lấy lịch hôm nay: $e');
+    }
+  }
+
+  Future<void> _loadUpcomingNotifications() async {
+    final appointmentService = context.read<AppointmentService>();
+    final vaccinationService = context.read<VaccinationService>();
+    final notificationProvider = context.read<NotificationProvider>();
+
+    final now = DateTime.now();
+
+    try {
+      final appointments = await appointmentService.getAllAppointments();
+      final vaccinations = await vaccinationService.getAllVaccinations();
+
+      for (var appt in appointments) {
+        if (appt.appointmentDatetime.isAfter(now) && appt.status == 'confirmed') {
+          notificationProvider.addNotification(NotificationItem(
+            title: 'Lịch khám cho: 🐾 ${appt.pet?.petName}',
+            message:
+            'Khám lúc ${formatDateTime(appt.appointmentDatetime)} với BS ${appt.veterinarian?.fullName}',
+            timestamp: DateTime.now(),
+            type: NotificationType.upcomingAppointment,
+          ));
+        }
+      }
+
+      for (var vac in vaccinations) {
+        if (vac.vaccinationDatetime.isAfter(now) && vac.status == 'confirmed') {
+          notificationProvider.addNotification(NotificationItem(
+            title: 'Lịch tiêm cho: 🐾 ${vac.pet?.petName}',
+            message:
+            '💉 ${vac.vaccine?.medicineName} lúc ${formatDateTime(vac.vaccinationDatetime)}',
+            timestamp: DateTime.now(),
+            type: NotificationType.upcomingVaccination,
+          ));
+        }
+      }
+    } catch (e) {
+      debugPrint('[Upcoming Notification] Lỗi: $e');
+    }
+  }
+
+  Future<void> _loadExpiryMedicineNotifications() async {
+    final medicineService = context.read<MedicineService>();
+    final notificationProvider = context.read<NotificationProvider>();
+
+    final now = DateTime.now();
+
+    try {
+      final medicines = await medicineService.getAllMedicines();
+
+      for (var med in medicines) {
+        final expiry = med.expiryDate;
+        if (expiry != null && expiry.isBefore(now)) {
+          notificationProvider.addNotification(NotificationItem(
+            title: '💊 ${med.medicineName}',
+            message:
+            'đã hết hạn từ ${formatDate(expiry)}',
+            timestamp: DateTime.now(),
+            type: NotificationType.expiredMedicine,
+          ));
+        }
+      }
+    } catch (e) {
+      debugPrint('[Expired Medicine Notification] Lỗi: $e');
     }
   }
 
