@@ -24,10 +24,10 @@ class AuthService extends ChangeNotifier {
     if (userJson != null) {
       try {
         _currentUser = User.fromJson(jsonDecode(userJson));
-        print('AuthService: Đã tải user từ SharedPreferences: ${_currentUser?.username ?? 'N/A'}');
-        print('AuthService: Ngày sinh từ SharedPreferences: ${_currentUser?.birth}');
+        // print('AuthService: Đã tải user từ SharedPreferences: ${_currentUser?.username ?? 'N/A'}');
+        // print('AuthService: Ngày sinh từ SharedPreferences: ${_currentUser?.birth}');
         notifyListeners();
-        print('AuthService: notifyListeners() called after loading user from prefs.');
+        // print('AuthService: notifyListeners() called after loading user from prefs.');
       } catch (e) {
         print('AuthService: Lỗi khi parse user từ SharedPreferences: $e');
         _currentUser = null;
@@ -59,15 +59,15 @@ class AuthService extends ChangeNotifier {
       final responseData = _handleResponse(response);
 
       if (response.statusCode == 200 && responseData.containsKey('token')) {
-        await _saveToken(responseData['token']); // Luôn lưu token
+        await _saveToken(responseData['token']);
 
         if (responseData.containsKey('user')) {
           _currentUser = User.fromJson(responseData['user']);
 
-          if (rememberMe) { // Chỉ lưu dữ liệu user nếu `rememberMe` là true
+          if (rememberMe) {
             await _saveUserToPrefs(_currentUser!);
           } else {
-            await _removeUserFromPrefs(); // Xóa dữ liệu user nếu không ghi nhớ
+            await _removeUserFromPrefs();
           }
           notifyListeners();
         }
@@ -111,8 +111,6 @@ class AuthService extends ChangeNotifier {
 
   void updateCurrentUser(User updatedUser) async {
     _currentUser = updatedUser;
-    // Cần kiểm tra lại `remember_me` để quyết định có lưu vào prefs không
-    // Hoặc nếu bạn muốn luôn cập nhật user data đã lưu khi có thay đổi từ server:
     await _saveUserToPrefs(_currentUser!);
     notifyListeners();
   }

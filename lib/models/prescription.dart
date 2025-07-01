@@ -52,7 +52,7 @@ class Prescription {
     int? medicalRecordId,
     int? veterinarianId,
     String? veterinarianNote,
-    DateTime? prescriptionDate, // Đã thay đổi kiểu dữ liệu
+    DateTime? prescriptionDate,
     List<PrescriptionItem>? items,
   }) {
     return Prescription(

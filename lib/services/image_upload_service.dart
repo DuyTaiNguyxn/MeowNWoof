@@ -1,4 +1,3 @@
-// lib/services/image_upload_service.dart (tên có thể đổi thành generic hơn)
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -8,17 +7,17 @@ class ImageUploadService {
 
   Future<String> uploadImage({
     required File imageFile,
-    required String uploadPreset, // Nhận preset làm tham số
-    String? folder, // Thêm tùy chọn thư mục nếu cần
+    required String uploadPreset,
+    String? folder,
   }) async {
     final uri = Uri.parse('https://api.cloudinary.com/v1_1/$CLOUD_NAME/image/upload');
 
     try {
       var request = http.MultipartRequest('POST', uri)
-        ..fields['upload_preset'] = uploadPreset; // Sử dụng preset truyền vào
+        ..fields['upload_preset'] = uploadPreset;
 
       if (folder != null && folder.isNotEmpty) {
-        request.fields['folder'] = folder; // Đặt thư mục nếu có
+        request.fields['folder'] = folder;
       }
 
       request.files.add(await http.MultipartFile.fromPath('file', imageFile.path));

@@ -1,13 +1,12 @@
-// Trong lib/models/pet_owner.dart (Nếu owner_id có thể là null)
 class PetOwner {
-  final int? ownerId; // Đổi thành nullable nếu có thể null
+  final int? ownerId;
   final String ownerName;
   final String phone;
   final String? email;
   final String? address;
 
   PetOwner({
-    this.ownerId, // Bỏ required nếu đổi thành nullable
+    this.ownerId,
     required this.ownerName,
     required this.phone,
     this.email,

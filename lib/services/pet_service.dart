@@ -24,7 +24,6 @@ class PetService {
     };
   }
 
-  // Lấy danh sách Pet (có thể bao gồm thông tin owner, species, breed nhúng)
   Future<List<Pet>> getPets() async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/pets'));
@@ -53,10 +52,8 @@ class PetService {
     }
   }
 
-  // Lấy thông tin một Pet theo ID
   Future<Pet> getPetById(int petId) async {
     try {
-      // Tương tự, nếu API này yêu cầu xác thực, hãy dùng headersWithAuth
       final response = await http.get(Uri.parse('$_baseUrl/pets/$petId'));
       if (response.statusCode == 200) {
         return Pet.fromJson(jsonDecode(response.body));
@@ -74,14 +71,13 @@ class PetService {
     }
   }
 
-  // Thêm một Pet mới (YÊU CẦU XÁC THỰC TOKEN)
   Future<Pet> createPet(Pet pet) async {
     try {
       final headers = await _getHeadersWithAuth();
 
       final petDataJson = jsonEncode(pet.toJson());
-      print('DEBUG: Data being sent to backend for pet creation:');
-      print(petDataJson);
+      // print('DEBUG: Data being sent to backend for pet creation:');
+      // print(petDataJson);
 
       final response = await http.post(
         Uri.parse('$_baseUrl/pets'),
@@ -89,8 +85,8 @@ class PetService {
         body: petDataJson,
       );
 
-      print('DEBUG: createPet Status Code: ${response.statusCode}');
-      print('DEBUG: createPet Response Body: ${response.body}');
+      // print('DEBUG: createPet Status Code: ${response.statusCode}');
+      // print('DEBUG: createPet Response Body: ${response.body}');
 
       if (response.statusCode == 201) {
         return Pet.fromJson(jsonDecode(response.body));
@@ -117,7 +113,7 @@ class PetService {
 
       final petDataJson = jsonEncode(petData);
 
-      print('DEBUG: Data being sent for update: $petDataJson');
+      // print('DEBUG: Data being sent for update: $petDataJson');
 
       final response = await http.put(
         Uri.parse('$_baseUrl/pets/${pet.petId}'),
@@ -125,8 +121,8 @@ class PetService {
         body: petDataJson,
       );
 
-      print('DEBUG: updatePet Status Code: ${response.statusCode}');
-      print('DEBUG: updatePet Response Body: ${response.body}');
+      // print('DEBUG: updatePet Status Code: ${response.statusCode}');
+      // print('DEBUG: updatePet Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBodyMap = jsonDecode(response.body);
@@ -146,7 +142,6 @@ class PetService {
     }
   }
 
-  // Xóa một Pet (YÊU CẦU XÁC THỰC TOKEN)
   Future<void> deletePet(int petId) async {
     try {
       final headers = await _getHeadersWithAuth();
@@ -154,9 +149,6 @@ class PetService {
         Uri.parse('$_baseUrl/pets/$petId'),
         headers: headers,
       );
-
-      print('DEBUG: deletePet Status Code: ${response.statusCode}');
-      print('DEBUG: deletePet Response Body: ${response.body}');
 
       if (response.statusCode != 200) {
         String errorMessage = 'Failed to delete pet';

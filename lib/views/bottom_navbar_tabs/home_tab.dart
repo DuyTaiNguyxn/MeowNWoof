@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:meow_n_woof/models/medical_record.dart';
-import 'package:meow_n_woof/models/notification_item.dart';
 import 'package:meow_n_woof/models/pet.dart';
 import 'package:meow_n_woof/models/prescription.dart';
 import 'package:meow_n_woof/providers/notification_provider.dart';
-import 'package:meow_n_woof/services/medicine_service.dart';
 import 'package:meow_n_woof/views/medical_record/medical_record_list.dart';
 import 'package:meow_n_woof/views/medicine/medicine_list.dart';
 import 'package:meow_n_woof/views/pet/create_pet_profile.dart';
@@ -14,9 +12,7 @@ import 'package:meow_n_woof/views/prescription/prescription_detail.dart';
 import 'package:meow_n_woof/views/user/user_profile.dart';
 import 'package:meow_n_woof/services/auth_service.dart';
 import 'package:meow_n_woof/services/pet_service.dart';
-import 'package:meow_n_woof/services/appointment_service.dart';
 import 'package:meow_n_woof/services/prescription_service.dart';
-import 'package:meow_n_woof/services/vaccination_service.dart';
 import 'package:meow_n_woof/widgets/med_record_selection_widget.dart';
 import 'package:meow_n_woof/widgets/pet_selection_widget.dart';
 import 'package:provider/provider.dart';
@@ -53,9 +49,7 @@ class _HomeTabState extends State<HomeTab> {
     _searchController.addListener(_onSearch);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadPets();
-      _loadTodayNotifications();
-      _loadUpcomingNotifications();
-      _loadExpiryMedicineNotifications();
+      context.read<NotificationProvider>().loadNotifications(context);
     });
   }
 
@@ -81,121 +75,6 @@ class _HomeTabState extends State<HomeTab> {
           _isLoadingPets = false;
         });
       }
-    }
-  }
-
-  Future<void> _loadTodayNotifications() async {
-    final appointmentService = context.read<AppointmentService>();
-    final vaccinationService = context.read<VaccinationService>();
-    final notificationProvider = context.read<NotificationProvider>();
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    try {
-      final appointments = await appointmentService.getAllAppointments();
-      final vaccinations = await vaccinationService.getAllVaccinations();
-
-      final appointmentsToday = appointments.where((a) {
-        final aDate = a.appointmentDatetime.toLocal();
-        return aDate.year == today.year &&
-            aDate.month == today.month &&
-            aDate.day == today.day &&
-            a.status == 'confirmed';
-      });
-
-      for (var appt in appointmentsToday) {
-        notificationProvider.addNotification(NotificationItem(
-          title: 'Lịch khám cho: 🐾 ${appt.pet?.petName}',
-          message: 'Khám lúc ${formatDateTime(appt.appointmentDatetime)} với bác sĩ ${appt.veterinarian?.fullName}',
-          timestamp: DateTime.now(),
-          type: NotificationType.todayAppointment,
-        ));
-      }
-
-      final vaccinationsToday = vaccinations.where((v) {
-        final vDate = v.vaccinationDatetime.toLocal();
-        return vDate.year == today.year &&
-            vDate.month == today.month &&
-            vDate.day == today.day &&
-            v.status == 'confirmed';
-      });
-
-      for (var vac in vaccinationsToday) {
-        notificationProvider.addNotification(NotificationItem(
-          title: 'Lịch tiêm cho: 🐾 ${vac.pet?.petName}',
-          message: '💉 ${vac.vaccine?.medicineName} lúc ${formatDateTime(vac.vaccinationDatetime)}',
-          timestamp: DateTime.now(),
-          type: NotificationType.todayVaccination,
-        ));
-      }
-    } catch (e) {
-      debugPrint('Lỗi lấy lịch hôm nay: $e');
-    }
-  }
-
-  Future<void> _loadUpcomingNotifications() async {
-    final appointmentService = context.read<AppointmentService>();
-    final vaccinationService = context.read<VaccinationService>();
-    final notificationProvider = context.read<NotificationProvider>();
-
-    final now = DateTime.now();
-
-    try {
-      final appointments = await appointmentService.getAllAppointments();
-      final vaccinations = await vaccinationService.getAllVaccinations();
-
-      for (var appt in appointments) {
-        if (appt.appointmentDatetime.isAfter(now) && appt.status == 'confirmed') {
-          notificationProvider.addNotification(NotificationItem(
-            title: 'Lịch khám cho: 🐾 ${appt.pet?.petName}',
-            message:
-            'Khám lúc ${formatDateTime(appt.appointmentDatetime)} với BS ${appt.veterinarian?.fullName}',
-            timestamp: DateTime.now(),
-            type: NotificationType.upcomingAppointment,
-          ));
-        }
-      }
-
-      for (var vac in vaccinations) {
-        if (vac.vaccinationDatetime.isAfter(now) && vac.status == 'confirmed') {
-          notificationProvider.addNotification(NotificationItem(
-            title: 'Lịch tiêm cho: 🐾 ${vac.pet?.petName}',
-            message:
-            '💉 ${vac.vaccine?.medicineName} lúc ${formatDateTime(vac.vaccinationDatetime)}',
-            timestamp: DateTime.now(),
-            type: NotificationType.upcomingVaccination,
-          ));
-        }
-      }
-    } catch (e) {
-      debugPrint('[Upcoming Notification] Lỗi: $e');
-    }
-  }
-
-  Future<void> _loadExpiryMedicineNotifications() async {
-    final medicineService = context.read<MedicineService>();
-    final notificationProvider = context.read<NotificationProvider>();
-
-    final now = DateTime.now();
-
-    try {
-      final medicines = await medicineService.getAllMedicines();
-
-      for (var med in medicines) {
-        final expiry = med.expiryDate;
-        if (expiry != null && expiry.isBefore(now)) {
-          notificationProvider.addNotification(NotificationItem(
-            title: '💊 ${med.medicineName}',
-            message:
-            'đã hết hạn từ ${formatDate(expiry)}',
-            timestamp: DateTime.now(),
-            type: NotificationType.expiredMedicine,
-          ));
-        }
-      }
-    } catch (e) {
-      debugPrint('[Expired Medicine Notification] Lỗi: $e');
     }
   }
 
@@ -301,7 +180,6 @@ class _HomeTabState extends State<HomeTab> {
     }
 
     try {
-      // 1. Chọn thú cưng
       final selectedPet = await Navigator.push<Pet>(
         context,
         MaterialPageRoute(
@@ -316,7 +194,6 @@ class _HomeTabState extends State<HomeTab> {
 
       if (selectedPet == null) return;
 
-      // 2. Chọn hồ sơ y tế của thú cưng đó
       final selectedRecord = await Navigator.push<PetMedicalRecord>(
         context,
         MaterialPageRoute(
@@ -330,22 +207,14 @@ class _HomeTabState extends State<HomeTab> {
       final employeeId = authService.currentUser?.employeeId;
 
       try {
-        // 3. Kiểm tra xem đã có đơn thuốc chưa
         final existingPrescription = await prescriptionService.getPrescriptionByRecordId(medicalRecordId);
-
-        // 3a. Nếu có đơn thuốc → chuyển đến chi tiết
-        final hasPrescriptionChange = await Navigator.push<bool>(
+        Navigator.push<bool>(
           context,
           MaterialPageRoute(
             builder: (_) => PrescriptionDetailPage(medicalRecordId: existingPrescription.medicalRecordId),
           ),
         );
-
-        if (hasPrescriptionChange == true) {
-          // xử lý cập nhật nếu cần
-        }
       } catch (e) {
-        // 3b. Nếu chưa có đơn thuốc → tạo mới
         try {
           final newPrescription = Prescription(
             medicalRecordId: medicalRecordId,
@@ -355,17 +224,12 @@ class _HomeTabState extends State<HomeTab> {
           );
 
           final created = await prescriptionService.createPrescription(newPrescription);
-
-          final hasPrescriptionChange = await Navigator.push<bool>(
+          Navigator.push<bool>(
             context,
             MaterialPageRoute(
               builder: (_) => PrescriptionDetailPage(medicalRecordId: created.medicalRecordId),
             ),
           );
-
-          if (hasPrescriptionChange == true) {
-            // xử lý cập nhật nếu cần
-          }
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -407,13 +271,13 @@ class _HomeTabState extends State<HomeTab> {
         final userRole = _getLocalizedRole(currentUser?.role);
         final userAvatarUrl = currentUser?.avatarURL;
 
-        print('Thông tin người dùng hiện tại:');
-        print('ID: ${currentUser?.employeeId}');
-        print('Tên đầy đủ: ${currentUser?.fullName}');
-        print('Email: ${currentUser?.email}');
-        print('Ngay sinh: ${currentUser?.birth}');
-        print('Vai trò: ${currentUser?.role}');
-        print('URL Avatar: ${currentUser?.avatarURL}');
+        // print('Thông tin người dùng hiện tại:');
+        // print('ID: ${currentUser?.employeeId}');
+        // print('Tên đầy đủ: ${currentUser?.fullName}');
+        // print('Email: ${currentUser?.email}');
+        // print('Ngay sinh: ${currentUser?.birth}');
+        // print('Vai trò: ${currentUser?.role}');
+        // print('URL Avatar: ${currentUser?.avatarURL}');
         return InkWell(
           onTap: () async {
             await Navigator.push(

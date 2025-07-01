@@ -163,7 +163,6 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Pet selection
               _buildSelectTile(
                 title: _selectedPet?.petName ?? 'Chọn Thú cưng',
                 onTap: () async {
@@ -183,7 +182,6 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Vaccine selection
               _buildSelectTile(
                 title: _selectedVaccine?.medicineName ?? 'Chọn Vaccine',
                 onTap: () async {
@@ -203,7 +201,6 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Disease field
               TextFormField(
                 controller: _diseasePreventedController,
                 decoration: const InputDecoration(
@@ -216,7 +213,6 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Date picker
               ListTile(
                 title: Text(
                   'Ngày tiêm: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
@@ -225,7 +221,6 @@ class _EditVaccinationScreenState extends State<EditVaccinationScreen> {
                 onTap: () => _selectDate(context),
               ),
 
-              // Time picker
               ListTile(
                 title: Text(
                   'Giờ tiêm: ${_selectedTime.format(context)}',

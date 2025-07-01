@@ -20,7 +20,6 @@ class SettingsPage extends StatelessWidget {
         children: [
           const SizedBox(height: 12),
 
-          // Hàng 1: Chế độ tối
           _settingRow(
             icon: Icons.dark_mode,
             label: 'Chế độ tối',
@@ -30,7 +29,6 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
 
-          // Hàng 2: Ngôn ngữ
           _settingRow(
             icon: Icons.language,
             label: 'Ngôn ngữ',
@@ -49,7 +47,6 @@ class SettingsPage extends StatelessWidget {
             ),
           ),
 
-          // Hàng 3: Thông báo đẩy
           _settingRow(
             icon: Icons.notifications_active,
             label: 'Thông báo đẩy',
@@ -65,7 +62,6 @@ class SettingsPage extends StatelessWidget {
 
           const SizedBox(height: 32),
 
-          // Phiên bản
           const Column(
             children: [
               Icon(Icons.info_outline, size: 30, color: Colors.grey),

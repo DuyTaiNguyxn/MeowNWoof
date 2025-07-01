@@ -252,9 +252,6 @@ class _CreateAppointmentScreenState extends State<CreateAppointmentScreen> {
                 onTap: () => _selectTime(context),
               ),
               const SizedBox(height: 20),
-
-              // Bạn có thể thêm các trường khác nếu cần, ví dụ: lý do khám
-              // _buildTextField(_reasonController, 'Lý do khám (tùy chọn)', null, maxLines: 3, isRequired: false),
             ],
           ),
         ),

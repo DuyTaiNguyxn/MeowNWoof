@@ -225,7 +225,7 @@ class _VaccinationScheduleTabState extends State<VaccinationScheduleTab> {
                               children: [
                                 const TextSpan(text: '🐾 Tên thú cưng: '),
                                 TextSpan(
-                                  text: vaccination.pet?.petName ?? 'N/A',
+                                  text: vaccination.pet?.petName ?? 'Không rõ',
                                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                                 ),
                               ],

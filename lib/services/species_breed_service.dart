@@ -22,7 +22,7 @@ class SpeciesBreedService {
     }
   }
 
-  Future<List<Breed>> getBreeds() async { // Lấy tất cả giống, không lọc theo loài
+  Future<List<Breed>> getBreeds() async {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/breeds'));
       if (response.statusCode == 200) {

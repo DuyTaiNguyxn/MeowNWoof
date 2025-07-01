@@ -6,7 +6,7 @@ import 'package:meow_n_woof/widgets/medicine_selection_widget.dart';
 import 'package:provider/provider.dart';
 
 class AddPrescriptionItemScreen extends StatefulWidget {
-  final int prescriptionId; // Cần ID của đơn thuốc để thêm mục
+  final int prescriptionId;
 
   const AddPrescriptionItemScreen({super.key, required this.prescriptionId});
 
@@ -88,7 +88,7 @@ class _AddPrescriptionItemScreenState extends State<AddPrescriptionItemScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Thêm thuốc vào đơn thành công!')),
         );
-        Navigator.pop(context, true); // Quay lại và báo thành công
+        Navigator.pop(context, true);
       } catch (e) {
         print('[AddPrescriptionItem] Lỗi thêm thuốc vào đơn: ${e.toString()}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +102,6 @@ class _AddPrescriptionItemScreenState extends State<AddPrescriptionItemScreen> {
     }
   }
 
-  // Helper function cho TextFormField
   Widget _buildTextField(TextEditingController controller, String labelText,
       String? Function(String?)? validator,
       {int maxLines = 1, bool isRequired = true, TextInputType keyboardType = TextInputType.text}) {
@@ -144,7 +143,6 @@ class _AddPrescriptionItemScreenState extends State<AddPrescriptionItemScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Chọn thuốc
               Card(
                 margin: EdgeInsets.zero,
                 elevation: 0,
@@ -167,7 +165,6 @@ class _AddPrescriptionItemScreenState extends State<AddPrescriptionItemScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Số lượng
               _buildTextField(
                 _quantityController,
                 'Số lượng',
@@ -183,7 +180,6 @@ class _AddPrescriptionItemScreenState extends State<AddPrescriptionItemScreen> {
                 keyboardType: TextInputType.number,
               ),
 
-              // Liều dùng
               _buildTextField(
                 _dosageController,
                 'Liều dùng',
@@ -193,7 +189,7 @@ class _AddPrescriptionItemScreenState extends State<AddPrescriptionItemScreen> {
                   }
                   return null;
                 },
-                maxLines: 3, // Cho phép nhập liều dùng dài hơn
+                maxLines: 3,
               ),
             ],
           ),

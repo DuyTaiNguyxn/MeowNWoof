@@ -31,7 +31,6 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
   @override
   void initState() {
     super.initState();
-    // Gán service trong initState
     recordService = context.read<MedicalRecordService>();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchMedicalRecords();
@@ -216,7 +215,6 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                 final record = _filteredRecords[index];
 
                 return InkWell(
-                  // Truyền bản ghi vào _handleRecordSelect
                   onTap: () => _handleRecordSelect(record),
                   child: SizedBox(
                     width: double.infinity,
@@ -291,9 +289,8 @@ class _MedicalRecordListPageState extends State<MedicalRecordListPage> {
                 petName: widget.selectedPet.petName
             )),
           );
-          // Nếu CreateMedicalRecordScreen trả về true (tạo mới thành công)
           if (result == true) {
-            _fetchMedicalRecords(); // Tải lại danh sách
+            _fetchMedicalRecords();
           }
         },
         backgroundColor: Colors.lightBlue,

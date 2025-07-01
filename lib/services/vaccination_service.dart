@@ -46,8 +46,8 @@ class VaccinationService {
       final headers = await _getHeadersWithAuth();
       final response = await http.get(Uri.parse('$_baseUrl/$id'), headers: headers);
 
-      print('[VaccinationService] getVaccinationById Status: ${response.statusCode}');
-      print('[VaccinationService] getVaccinationById Body: ${response.body}');
+      // print('[VaccinationService] getVaccinationById Status: ${response.statusCode}');
+      // print('[VaccinationService] getVaccinationById Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> body = json.decode(response.body);
@@ -91,8 +91,8 @@ class VaccinationService {
 
       final response = await http.put(Uri.parse('$_baseUrl/$id'), headers: headers, body: body);
 
-      print('[VaccinationService] updateVaccination Status: ${response.statusCode}');
-      print('[VaccinationService] updateVaccination Body: ${response.body}');
+      // print('[VaccinationService] updateVaccination Status: ${response.statusCode}');
+      // print('[VaccinationService] updateVaccination Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);

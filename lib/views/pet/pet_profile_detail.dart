@@ -257,7 +257,6 @@ class _PetProfileDetailState extends State<PetProfileDetail> {
     );
   }
 
-  // Hàm _buildPetImage bây giờ nhận một đối tượng Pet
   Widget _buildPetImage(Pet petToDisplay) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),

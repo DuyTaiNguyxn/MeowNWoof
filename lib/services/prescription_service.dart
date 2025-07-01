@@ -57,8 +57,8 @@ class PrescriptionService {
 
     final requestBody = prescription.toJson();
 
-    print('[Create Prescription]Request body to be sent:');
-    print(json.encode(requestBody));
+    // print('[Create Prescription]Request body to be sent:');
+    // print(json.encode(requestBody));
 
     final response = await http.post(
       Uri.parse('$_baseUrl/prescriptions'),
@@ -81,8 +81,8 @@ class PrescriptionService {
       body: json.encode(prescription.toJson()),
     );
 
-    print('[Update Prescription] Status: ${response.statusCode}');
-    print('[Update Prescription] Body: ${response.body}');
+    // print('[Update Prescription] Status: ${response.statusCode}');
+    // print('[Update Prescription] Body: ${response.body}');
 
     if (response.statusCode == 200) {
       return Prescription.fromJson(json.decode(response.body));

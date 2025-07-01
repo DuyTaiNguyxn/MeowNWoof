@@ -47,7 +47,6 @@ class _PrescriptionDetailPageState extends State<PrescriptionDetailPage> {
     }
   }
 
-  // Trong _PrescriptionDetailPageState
   Future<void> _updateNote() async {
     if (_prescription == null) {
       ScaffoldMessenger.of(context).showSnackBar(

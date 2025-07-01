@@ -172,7 +172,7 @@ class _CreateVaccinationScreenState extends State<CreateVaccinationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Tạo lịch tiêm chủng thành công!')),
         );
-        Navigator.pop(context, true); // Quay lại và báo thành công
+        Navigator.pop(context, true);
       } catch (e) {
         print('[Create Vaccination] Lỗi tạo lịch tiêm chủng: ${e.toString()}');
         ScaffoldMessenger.of(context).showSnackBar(
@@ -227,7 +227,6 @@ class _CreateVaccinationScreenState extends State<CreateVaccinationScreen> {
           key: _formKey,
           child: ListView(
             children: [
-              // Chọn thú cưng
               Card(
                 margin: EdgeInsets.zero,
                 elevation: 0,
@@ -262,7 +261,6 @@ class _CreateVaccinationScreenState extends State<CreateVaccinationScreen> {
                 isRequired: true,
               ),
 
-              // Chọn loại Vaccine
               Card(
                 margin: EdgeInsets.zero,
                 elevation: 0,
@@ -274,7 +272,7 @@ class _CreateVaccinationScreenState extends State<CreateVaccinationScreen> {
                   title: Text(
                     _selectedVaccine == null
                         ? 'Chọn Loại Vaccine'
-                        : _selectedVaccine!.medicineName, // Hiển thị tên vaccine
+                        : _selectedVaccine!.medicineName,
                     style: TextStyle(
                       color: _selectedVaccine == null ? Colors.grey[600] : Colors.black,
                     ),
@@ -285,7 +283,6 @@ class _CreateVaccinationScreenState extends State<CreateVaccinationScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Chọn Ngày tiêm
               ListTile(
                 title: Text(
                   'Ngày tiêm: ${DateFormat('dd/MM/yyyy').format(_selectedDate.toLocal())}',
@@ -295,7 +292,6 @@ class _CreateVaccinationScreenState extends State<CreateVaccinationScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Chọn Giờ tiêm
               ListTile(
                 title: Text(
                   'Giờ tiêm: ${DateFormat('HH:mm').format(DateTime(2023, 1, 1, _selectedTime.hour, _selectedTime.minute))}',

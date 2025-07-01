@@ -44,7 +44,7 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
     });
     try {
       if (_currentRecord?.id == null) {
-        throw Exception('Medical Record ID is null. Cannot fetch details.');
+        throw Exception('Medical Record ID = null');
       }
 
       final medicalRecordService = context.read<MedicalRecordService>();
@@ -91,19 +91,13 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
 
     try {
       final existingPrescription = await prescriptionService.getPrescriptionByRecordId(medicalRecordId);
-
-      final hasPrescriptionChange = await Navigator.push<bool>(
+      Navigator.push<bool>(
         context,
         MaterialPageRoute(
           builder: (_) => PrescriptionDetailPage(medicalRecordId: existingPrescription.medicalRecordId),
         ),
       );
-
-      if (hasPrescriptionChange == true) {
-        // xử lý khi quay lại có thay đổi
-      }
     } catch (e) {
-      // Nếu không có đơn thuốc → tạo mới
       try {
         final newPrescription = Prescription(
           medicalRecordId: _currentRecord!.id!,
@@ -113,17 +107,12 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
         );
 
         await prescriptionService.createPrescription(newPrescription);
-
-        final hasPrescriptionChange = await Navigator.push<bool>(
+        Navigator.push<bool>(
           context,
           MaterialPageRoute(
             builder: (_) => PrescriptionDetailPage(medicalRecordId: newPrescription.medicalRecordId),
           ),
         );
-
-        if (hasPrescriptionChange == true) {
-          // xử lý khi quay lại có thay đổi
-        }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -285,7 +274,6 @@ class _MedicalRecordDetailPageState extends State<MedicalRecordDetailPage> {
               ),
             ),
 
-            // Card chi tiết hồ sơ
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -42,7 +42,6 @@ class _AppointmentTabState extends State<AppointmentTab> {
     super.dispose();
   }
 
-  // Hàm lấy dữ liệu từ API
   Future<void> _fetchAppointments() async {
     setState(() {
       _isLoading = true;
@@ -212,7 +211,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
                                 children: [
                                   const TextSpan(text: '🐾 Tên thú cưng: '),
                                   TextSpan(
-                                    text: appointment.pet?.petName ?? 'N/A',
+                                    text: appointment.pet?.petName ?? 'Không rõ',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -228,7 +227,7 @@ class _AppointmentTabState extends State<AppointmentTab> {
                                 children: [
                                   const TextSpan(text: '👨‍⚕️ Bác sĩ thú y: '),
                                   TextSpan(
-                                    text: appointment.veterinarian?.fullName ?? 'N/A',
+                                    text: appointment.veterinarian?.fullName ?? 'Không rõ',
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.blueAccent,

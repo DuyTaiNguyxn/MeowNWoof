@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:meow_n_woof/views/settings.dart';
-import 'package:meow_n_woof/services/auth_service.dart'; // Import AuthService
+import 'package:meow_n_woof/services/auth_service.dart';
 import '../views/login.dart';
 
 class PopupMenuWidget extends StatelessWidget {
   PopupMenuWidget({super.key});
 
-  // Khởi tạo AuthService một lần để sử dụng (BỎ 'const' ở đây)
-  final AuthService _authService = AuthService(); // <-- Sửa đổi tại đây
+  final AuthService _authService = AuthService();
 
   Future<void> _logout(BuildContext context) async {
     await _authService.logout();
@@ -48,7 +47,7 @@ class PopupMenuWidget extends StatelessWidget {
           child: Row(
             children: [
               Icon(Icons.settings),
-              SizedBox(width: 8.0), // Thêm SizedBox bị thiếu ở đây
+              SizedBox(width: 8.0),
               Text('Cài đặt'),
             ],
           ),

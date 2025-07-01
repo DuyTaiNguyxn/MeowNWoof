@@ -57,7 +57,7 @@ class _MedicalRecordSelectionWidgetState extends State<MedicalRecordSelectionWid
         _isLoading = false;
       });
 
-      _onSearch(); // Apply filter immediately
+      _onSearch();
     } catch (e) {
       setState(() {
         _errorMessage = 'Lỗi tải hồ sơ: ${e.toString()}';

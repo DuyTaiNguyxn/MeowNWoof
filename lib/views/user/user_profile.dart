@@ -89,7 +89,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
           body: SingleChildScrollView(
             child: Column(
               children: [
-                // Header với avatar
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 30),
@@ -120,7 +119,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // Card thông tin cá nhân
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Card(
@@ -220,7 +218,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         return 'Nhân viên y tế';
       case 'veterinarian':
         return 'Bác sĩ thú y';
-      case 'admin': // Thêm case cho admin nếu có
+      case 'admin':
         return 'Quản trị viên';
       default:
         return 'Người dùng';

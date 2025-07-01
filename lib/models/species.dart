@@ -1,9 +1,9 @@
 class Species {
-  final int? speciesId; // species_id
-  final String speciesName; // species_name
-  final String? description; // description
-  final DateTime? createdAt; // created_at
-  final DateTime? updatedAt; // updated_at
+  final int? speciesId;
+  final String speciesName;
+  final String? description;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   Species({
     this.speciesId,
@@ -13,7 +13,6 @@ class Species {
     this.updatedAt,
   });
 
-  // Factory constructor để tạo đối tượng Species từ Map (JSON)
   factory Species.fromJson(Map<String, dynamic> json) {
     return Species(
       speciesId: json['species_id'] as int?,
@@ -22,7 +21,6 @@ class Species {
     );
   }
 
-  // Phương thức để chuyển đổi Species object thành Map (JSON) nếu cần gửi lên backend
   Map<String, dynamic> toJson() {
     return {
       'species_id': speciesId,

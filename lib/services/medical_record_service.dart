@@ -10,7 +10,6 @@ class MedicalRecordService {
 
   MedicalRecordService(this._authService);
 
-  // Hàm helper để tạo headers có token
   Future<Map<String, String>> _getHeadersWithAuth() async {
     final String? token = await _authService.getToken();
     print('[RecordService] Token retrieved: ${token != null ? "Token exists" : "Token is NULL"}'); 
@@ -34,15 +33,15 @@ class MedicalRecordService {
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
         final List<dynamic> data = responseBody['data'];
-        print('[RecordService] getAllMedicalRecords responseBody: $responseBody'); // Thêm log cụ thể
+        // print('[RecordService] getAllMedicalRecords responseBody: $responseBody');
         return data.map((json) => PetMedicalRecord.fromJson(json)).toList();
       } else {
         final Map<String, dynamic> errorBody = json.decode(response.body);
-        print('[RecordService] getAllMedicalRecords Failed: ${errorBody['message']} Status: ${response.statusCode}'); // Thêm log cụ thể
+        // print('[RecordService] getAllMedicalRecords Failed: ${errorBody['message']} Status: ${response.statusCode}');
         throw Exception('Failed to load medical records: ${errorBody['message']}');
       }
     } catch (e) {
-      print('Error in getAllMedicalRecords (Service Catch Block): $e'); // Sửa tên log
+      print('Error in getAllMedicalRecords (Service Catch Block): $e');
       throw Exception('Failed to connect to server or process data: $e');
     }
   }
@@ -155,16 +154,16 @@ class MedicalRecordService {
           headers: headers
       );
 
-      print('[RecordService] HTTP Status Code: ${response.statusCode}'); 
-      print('[RecordService] HTTP Response Body: ${response.body}');     
+      // print('[RecordService] HTTP Status Code: ${response.statusCode}');
+      // print('[RecordService] HTTP Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
         final List<dynamic> rawData = responseBody['data'];
-        print('[RecordService] responseBody["data"] received: ${rawData.length} items for petId: $petId');
+        // print('[RecordService] responseBody["data"] received: ${rawData.length} items for petId: $petId');
         final List<PetMedicalRecord> medicalRecords = rawData.map((json) {
           final record = PetMedicalRecord.fromJson(json);
-          print('[RecordService] Parsed Medical Record (fromJson): ${record.toJson()}'); // Log từng đối tượng đã parse
+          // print('[RecordService] Parsed Medical Record (fromJson): ${record.toJson()}');
           return record;
         }).toList();
 
@@ -179,7 +178,7 @@ class MedicalRecordService {
         throw Exception('Failed to load medical records for pet: ${errorBody['message']} (Status: ${response.statusCode})');
       }
     } catch (e) {
-      print('Error in getMedicalRecordsByPetId (Service Catch Block): $e'); // Sửa tên log để phân biệt
+      print('Error in getMedicalRecordsByPetId (Service Catch Block): $e');
       throw Exception('Failed to connect to server or process data: $e');
     }
   }

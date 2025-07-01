@@ -169,7 +169,6 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Trường Ngày khám
               ListTile(
                 title: Text(
                   'Ngày khám: ${_recordDate.toLocal().toString().split(' ')[0]}',
@@ -179,7 +178,6 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Trường Chọn Bác sĩ
               Card(
                 margin: EdgeInsets.zero,
                 elevation: 0,
@@ -202,7 +200,6 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Các trường nhập liệu
               _buildTextField(_symptomsController, 'Triệu chứng', null, maxLines: 3, isRequired: false),
               _buildTextField(_preliminaryDiagnosisController, 'Chẩn đoán sơ bộ', null, maxLines: 3, isRequired: false),
               _buildTextField(_finalDiagnosisController, 'Chẩn đoán cuối cùng', 'Vui lòng nhập chẩn đoán cuối cùng', maxLines: 3),
@@ -249,7 +246,6 @@ class _EditMedicalRecordScreenState extends State<EditMedicalRecordScreen> {
       originalRecord.recordDate.toLocal().month,
       originalRecord.recordDate.toLocal().day,
     );
-    // print('---[Edit Check] So sánh hồ sơ ---');
     // print('original recordDate: ${originalRecord.recordDate}');
     // print('current recordDate: $_recordDate');
     //

@@ -253,7 +253,6 @@ class _EditUserProfilePageState extends State<EditUserProfilePage> {
           padding: const EdgeInsets.all(16),
           child: ElevatedButton.icon(
             onPressed: () async {
-              // Gọi hàm kiểm tra mới
               if (!_hasUserDataChanged()) {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(

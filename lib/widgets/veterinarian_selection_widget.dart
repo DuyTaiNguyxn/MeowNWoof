@@ -30,7 +30,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
   void initState() {
     super.initState();
     _searchController.addListener(_onSearch);
-    // Đảm bảo context sẵn sàng trước khi gọi Provider.of
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchVeterinarians();
     });
@@ -43,10 +42,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
     });
 
     try {
-      // Đảm bảo context không null và sẵn sàng để sử dụng Provider
-      // Nếu bạn đang gọi hàm này trong initState(), hãy bọc nó bằng WidgetsBinding.instance.addPostFrameCallback
-      // hoặc gọi nó trong build method (nhưng cẩn thận với loop vô hạn)
-      // Cách tốt nhất là dùng addPostFrameCallback như trên, hoặc dùng Consumer/Selector
       final userService = Provider.of<UserService>(context, listen: false);
       final vets = await userService.getVeterinarianUsers();
 
@@ -83,7 +78,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
 
   @override
   Widget build(BuildContext context) {
-    // Bọc toàn bộ nội dung trong một Scaffold
     return Scaffold(
       appBar: AppBar(
         title: const Text('Chọn Bác Sĩ Thú Y'),
@@ -95,14 +89,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            // Không cần Center Text này nữa vì đã có AppBar title
-            // const Center(
-            //   child: Text(
-            //     'Chọn Bác Sĩ Thú Y',
-            //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            //   ),
-            // ),
-            // const SizedBox(height: 20),
             TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -112,7 +98,6 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
               ),
             ),
             const SizedBox(height: 12),
-            // Đã bọc ListView.builder bằng Expanded từ trước, nó sẽ giải quyết lỗi overflow
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -155,7 +140,7 @@ class _VeterinarianSelectionWidgetState extends State<VeterinarianSelectionWidge
                       ),
                       subtitle: Text('SĐT: $sdt', style: TextStyle(color: Colors.grey[700])),
                       onTap: () {
-                        Navigator.pop(context, vet); // Truyền đối tượng User về màn hình trước
+                        Navigator.pop(context, vet);
                       },
                     ),
                   );

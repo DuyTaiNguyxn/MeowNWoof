@@ -77,7 +77,6 @@ class _CreateMedicalRecordScreenState extends State<CreateMedicalRecordScreen> {
     }
   }
 
-  // Hàm gửi dữ liệu đến backend
   Future<void> _submitMedicalRecord() async {
     if (_formKey.currentState!.validate()) {
       if (_selectedVeterinarian == null) {
@@ -147,7 +146,6 @@ class _CreateMedicalRecordScreenState extends State<CreateMedicalRecordScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Trường Ngày khám
               ListTile(
                 title: Text(
                   'Ngày khám: ${_recordDate.toLocal().toString().split(' ')[0]}',
@@ -157,7 +155,6 @@ class _CreateMedicalRecordScreenState extends State<CreateMedicalRecordScreen> {
               ),
               const SizedBox(height: 10),
 
-              // Trường Chọn Bác sĩ
               Card(
                 margin: EdgeInsets.zero,
                 elevation: 0,
@@ -180,7 +177,6 @@ class _CreateMedicalRecordScreenState extends State<CreateMedicalRecordScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Các trường nhập liệu
               _buildTextField(_symptomsController, 'Triệu chứng', null, maxLines: 3, isRequired: false),
               _buildTextField(_preliminaryDiagnosisController, 'Chẩn đoán sơ bộ', null, maxLines: 3, isRequired: false),
               _buildTextField(_finalDiagnosisController, 'Chẩn đoán cuối cùng', 'Vui lòng nhập chẩn đoán cuối cùng', maxLines: 3),

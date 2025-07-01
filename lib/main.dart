@@ -126,7 +126,6 @@ class MyApp extends StatelessWidget {
       ],
       home: Builder(
         builder: (context) {
-          // Lắng nghe sự thay đổi của AuthService
           final authService = Provider.of<AuthService>(context);
 
           if (authService.currentUser != null) {

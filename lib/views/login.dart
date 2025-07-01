@@ -105,7 +105,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo / Tên App
                 Image.asset('assets/images/logo.png', width: 200, height: 200,),
 
                 const SizedBox(height: 32),
@@ -172,7 +171,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 24),
 
-                // Nút đăng nhập
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(

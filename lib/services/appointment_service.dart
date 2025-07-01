@@ -55,8 +55,8 @@ class AppointmentService {
         headers: headers,
       );
 
-      print('[AppointmentService] getAppointmentById Status: ${response.statusCode}');
-      print('[AppointmentService] getAppointmentById Body: ${response.body}');
+      // print('[AppointmentService] getAppointmentById Status: ${response.statusCode}');
+      // print('[AppointmentService] getAppointmentById Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseBody = json.decode(response.body);
